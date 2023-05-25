@@ -81,8 +81,8 @@ jobs:
           dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
 
-      - name: List directory contents
-        run: ls -R
+      - name: Print REPO_NAME
+        run: echo ${{ env.REPO_NAME }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -95,7 +95,7 @@ jobs:
         id: create-stack
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: ${{ env.REPO_NAME }}
+          name: '${{ env.REPO_NAME }}'
           template: 'cloudformation/template.yml'
           capabilities: 'CAPABILITY_IAM'
           parameter-overrides: |
