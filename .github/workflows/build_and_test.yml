@@ -59,13 +59,17 @@ jobs:
           zip -r dependencies_layer.zip python  >/dev/null
           cd ..
 
+      - name: Get repository name
+        run: echo 'REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)' >> $GITHUB_ENV
+        shell: bash
+
       - name: Copy code to s3
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           source: 'lambda_code.zip'
-          dest: 's3://lambda-code-tests/${{ github.repository }}/lambda_code.zip'
+          dest: 's3://lambda-code-tests/${{ env.REPO_NAME }}/lambda_code.zip'
           aws_region: 'eu-west-1'
 
       - name: Copy dependencies to s3
@@ -74,5 +78,5 @@ jobs:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           source: 'dependencies_layer.zip'
-          dest: 's3://lambda-dependencies-test/${{ github.repository }}/dependencies_layer.zip'
+          dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
