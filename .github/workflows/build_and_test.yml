@@ -86,6 +86,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::183725561251:role/GithubActions
 
       - name: Deploy to AWS CloudFormation
         id: create-stack
