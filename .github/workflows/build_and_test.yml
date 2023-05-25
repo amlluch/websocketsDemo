@@ -96,7 +96,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: ${{ env.REPO_NAME }}
-          template: './cloudformation/template.yaml'
+          template: 'cloudformation/template.yml'
           capabilities: 'CAPABILITY_IAM'
           parameter-overrides: |
             RepoName=${{ env.REPO_NAME }}
