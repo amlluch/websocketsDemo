@@ -16,6 +16,7 @@ Resources:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
+      name: WebsocketsDemo-connect
       Layers:
         - !Ref DependenciesLambdaLayer
 
@@ -28,6 +29,7 @@ Resources:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
+      name: WebsocketsDemo-disconnect
       Layers:
         - !Ref DependenciesLambdaLayer
 
@@ -40,6 +42,7 @@ Resources:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
+      name: WebsocketsDemo-default
       Layers:
         - !Ref DependenciesLambdaLayer
 
