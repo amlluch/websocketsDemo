@@ -17,7 +17,7 @@ Resources:
         S3Key: connect_lambda.zip
       Runtime: python3.9
       Layers:
-        - !Ref FirstLambdaLayer
+        - !Ref DependenciesLambdaLayer
 
   DisconnectLambda:
     Type: AWS::Lambda::Function

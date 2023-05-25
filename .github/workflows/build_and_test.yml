@@ -80,9 +80,6 @@ jobs:
           dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
 
-      - name: Print REPO_NAME
-        run: echo ${{ env.REPO_NAME }}
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
