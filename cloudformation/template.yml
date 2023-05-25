@@ -169,6 +169,7 @@ Resources:
       DefaultRouteSettings:
         LoggingLevel: INFO
         DataTraceEnabled: true
+      AutoDeploy: true
 
 Outputs:
   WebSocketURI:
