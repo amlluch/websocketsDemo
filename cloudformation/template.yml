@@ -31,6 +31,18 @@ Resources:
       Layers:
         - !Ref DependenciesLambdaLayer
 
+  DefaultLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: src.lambda.default.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: lambda-code-tests
+        S3Key: "websocketsDemo/lambda_code.zip"
+      Runtime: python3.9
+      Layers:
+        - !Ref DependenciesLambdaLayer
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -89,6 +101,14 @@ Resources:
       AuthorizationType: NONE
       Target: !Sub "integrations/${DisconnectIntegration}"
 
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $default
+      AuthorizationType: NONE
+      Target: !Sub "integrations/${DefaultIntegration}"
+
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -104,6 +124,14 @@ Resources:
       Description: Disconnect Integration
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambda.Arn}/invocations"
+
+  DefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: Default Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultLambda.Arn}/invocations"
 
   WebSocketApiStage:
     Type: AWS::ApiGatewayV2::Stage
