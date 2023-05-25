@@ -25,3 +25,54 @@ jobs:
     - name: Run Tests
       run: |
         poetry run pytest tests/
+
+  deploy:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Poetry Install
+        uses: knowsuchagency/poetry-install@v2
+
+      - name: Generate zip for code
+        run: |
+          zip -r lambda_code.zip src
+
+      - name: Export requirements
+        run: |
+          poetry export -f requirements.txt -o requirements.txt
+          echo "Requirements list"
+          cat requirements.txt
+
+      - name: Install requirements in file
+        run: |
+          mkdir -p python
+          pip install -r requirements.txt -t python
+          zip -r dependencies_layer.zip python  >/dev/null
+          cd ..
+
+      - name: Copy code to s3
+        uses: prewk/s3-cp-action@v2
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          source: 'lambda_code.zip'
+          dest: 's3://lambda-code-tests/${{ github.repository }}/lambda_code.zip'
+          aws_region: 'eu-west-1'
+
+      - name: Copy dependencies to s3
+        uses: prewk/s3-cp-action@v2
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          source: 'dependencies_layer.zip'
+          dest: 's3://lambda-dependencies-test/${{ github.repository }}/dependencies_layer.zip'
+          aws_region: 'eu-west-1'
