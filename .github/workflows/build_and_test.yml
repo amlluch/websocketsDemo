@@ -80,3 +80,14 @@ jobs:
           source: 'dependencies_layer.zip'
           dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
+
+      - name: Deploy to AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+          stack-name: ${{ env.REPO_NAME }}
+          template: template.yaml
+          parameter-overrides: |
+            RepoName=${{ env.REPO_NAME }}
