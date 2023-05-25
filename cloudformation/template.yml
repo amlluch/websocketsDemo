@@ -105,6 +105,16 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambda.Arn}/invocations"
 
+  WebSocketApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: dev
+      Description: Development Stage
+      DefaultRouteSettings:
+        LoggingLevel: INFO
+        DataTraceEnabled: true
+
 Outputs:
   WebSocketURI:
     Description: "WebSocket URI"
