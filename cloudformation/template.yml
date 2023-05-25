@@ -14,7 +14,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: lambda-code-tests
-        S3Key: connect_lambda.zip
+        S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
       Layers:
         - !Ref DependenciesLambdaLayer
@@ -26,7 +26,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: lambda-code-tests
-        S3Key: "${RepoName}/lambda_code.zip"
+        S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
       Layers:
         - !Ref DependenciesLambdaLayer
