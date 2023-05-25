@@ -64,7 +64,7 @@ Resources:
         - python3.9
       Content:
         S3Bucket: lambda-dependencies-test
-        S3Key: "${RepoName}/dependencies_layer.zip"
+        S3Key: "websocketsDemo/dependencies_layer.zip"
 
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
