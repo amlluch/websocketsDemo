@@ -1,0 +1,27 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python Environment
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Poetry Install
+      uses: knowsuchagency/poetry-install@v2
+      with:
+        create-virtualenv: true
+    - name: Install Dependencies
+      run: |
+        poetry install
+    - name: Run Tests
+      run: |
+        poetry run pytest tests/

@@ -1,0 +1,8 @@
+.idea/
+venv/
+python/
+*.zip
+.pytest_cache/
+__pycache__/
+.aws-sam/
+packaged-template.yml
