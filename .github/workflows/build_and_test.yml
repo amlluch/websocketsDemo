@@ -60,7 +60,7 @@ jobs:
           cd ..
 
       - name: Get repository name
-        run: echo "::set-env name=REPO_NAME::$(echo $GITHUB_REPOSITORY | cut -d '/' -f2)"
+        run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d '/' -f2)" >> $GITHUB_ENV
 
       - name: Copy code to s3
         uses: prewk/s3-cp-action@v2
