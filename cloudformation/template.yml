@@ -6,6 +6,11 @@ Parameters:
     Type: String
     Description: The name of the GitHub repository
 
+  LambdaCodeVersion:
+    Type: String
+    Description: Version ID of the Lambda code in the S3 bucket
+    Default: '1'
+
 Resources:
   DefaultQueue:
     Type: AWS::SQS::Queue
@@ -64,6 +69,12 @@ Resources:
       Code:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
+      Metadata:
+        Hash: !Sub
+          - '{"S3Bucket": "${Bucket}", "S3Key": "${Key}", "S3ObjectVersion": "${Version}"}'
+          - Bucket: lambda-code-tests
+            Key: "websocketsDemo/lambda_code.zip"
+            Version: !Ref LambdaCodeVersion
       Runtime: python3.9
       FunctionName: WebsocketsDemo-connect
       Layers:
@@ -96,6 +107,12 @@ Resources:
       Code:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
+      Metadata:
+        Hash: !Sub
+          - '{"S3Bucket": "${Bucket}", "S3Key": "${Key}", "S3ObjectVersion": "${Version}"}'
+          - Bucket: lambda-code-tests
+            Key: "websocketsDemo/lambda_code.zip"
+            Version: !Ref LambdaCodeVersion
       Runtime: python3.9
       FunctionName: WebsocketsDemo-default
       Layers:
