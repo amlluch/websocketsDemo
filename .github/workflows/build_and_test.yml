@@ -62,6 +62,13 @@ jobs:
       - name: Get repository name
         run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d '/' -f2)" >> $GITHUB_ENV
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
       - name: Copy code to s3
         uses: prewk/s3-cp-action@v2
         with:
@@ -85,13 +92,6 @@ jobs:
           source: 'dependencies_layer.zip'
           dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
 
       - name: Deploy to AWS CloudFormation
         id: create-stack
