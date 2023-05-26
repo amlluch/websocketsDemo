@@ -112,6 +112,13 @@ jobs:
           --query 'Versions[?IsLatest==`true`].VersionId' --output text)
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
 
+      - name: Get bucket dependencies version Id
+        run: |
+          DEPENDENCIES_ID=$(aws s3api list-object-versions --bucket lambda-dependencies-test \
+          --prefix ${{ env.REPO_NAME }}/dependencies_layer.zip \
+          --query 'Versions[?IsLatest==`true`].VersionId' --output text)
+          echo "DEPENDENCIES_ID=$DEPENDENCIES_ID" >> $GITHUB_ENV
+
       - name: Copy dependencies to s3
         if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
         uses: prewk/s3-cp-action@v2
@@ -127,4 +134,4 @@ jobs:
           aws cloudformation deploy --template-file cloudformation/template.yml \
           --stack-name '${{ env.REPO_NAME }}' \
           --capabilities CAPABILITY_IAM \
-          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID}}'
+          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID}}' LambdaLayerVersion='${{ env.DEPENDENCIES_ID}}'

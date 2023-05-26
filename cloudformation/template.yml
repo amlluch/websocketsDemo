@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: Version ID of the Lambda code in the S3 bucket
 
+  LambdaLayerVersion:
+    Type: String
+    Description: Version ID of the Lambda dependencies in the S3 bucket
+
 Resources:
   DefaultQueue:
     Type: AWS::SQS::Queue
@@ -171,6 +175,7 @@ Resources:
       Content:
         S3Bucket: lambda-dependencies-test
         S3Key: !Sub "${RepoName}/dependencies_layer.zip"
+        S3ObjectVersion: !Ref LambdaLayerVersion
 
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
