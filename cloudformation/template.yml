@@ -9,7 +9,6 @@ Parameters:
   LambdaCodeVersion:
     Type: String
     Description: Version ID of the Lambda code in the S3 bucket
-    Default: '1'
 
 Resources:
   DefaultQueue:

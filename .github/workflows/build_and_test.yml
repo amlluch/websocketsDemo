@@ -39,12 +39,23 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Poetry Install
-        uses: knowsuchagency/poetry-install@v2
+      - name: Check if src has changed
+        id: check_changes
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          if [ -n "$CHANGED" ]; then
+            echo "::set-output name=src_changed::true"
+          else
+            echo "::set-output name=src_changed::false"
+          fi
 
       - name: Generate zip for code
+        if: steps.check_changes.outputs.src_changed == 'true'
         run: |
           zip -r lambda_code.zip src
+
+      - name: Poetry Install
+        uses: knowsuchagency/poetry-install@v2
 
       - name: Export requirements
         run: |
@@ -70,6 +81,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Copy code to s3
+        if: steps.check_changes.outputs.src_changed == 'true'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
