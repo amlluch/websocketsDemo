@@ -177,17 +177,16 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       Description: Default Integration
-      IntegrationType: AWS
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
       IntegrationUri:
-        Fn::Sub:
-          - "arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${QueueName}"
-          - QueueName: !GetAtt DefaultQueue.QueueName
-      CredentialsArn: !GetAtt WebsocketsSQSIAMRole.Arn # IAM Role with permissions to send messages to the SQS queue
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:sqs:action/SendMessage/${DefaultQueue}
+      CredentialsArn: !GetAtt WebsocketsSQSIAMRole.Arn
+      PassthroughBehavior: WHEN_NO_TEMPLATES
       RequestParameters:
         "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
       RequestTemplates:
         "application/json": "Action=SendMessage&MessageBody=$input.body"
-      PassthroughBehavior: "WHEN_NO_TEMPLATES"
 
   WebSocketApiStage:
     Type: AWS::ApiGatewayV2::Stage
