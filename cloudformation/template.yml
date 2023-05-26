@@ -96,7 +96,7 @@ Resources:
         - !Ref DependenciesLambdaLayer
       Environment:
         Variables:
-          QUEUE_URL: !Ref DefaultQueue.QueueUrl
+          QUEUE_URL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${DefaultQueue.QueueName}"
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
