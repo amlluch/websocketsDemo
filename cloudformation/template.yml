@@ -72,7 +72,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Handler: src.lambda.connect.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt ConnectExecutionRole.Arn
       Code:
         S3Bucket: lambda-code-tests
         S3Key: !Sub "${RepoName}/lambda_code.zip"
@@ -86,7 +86,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Handler: src.lambda.disconnect.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt DisconnectExecutionRole.Arn
       Code:
         S3Bucket: lambda-code-tests
         S3Key: !Sub "${RepoName}/lambda_code.zip"
@@ -100,7 +100,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Handler: src.lambda.default.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt DefaultExecutionRole.Arn
       Code:
         S3Bucket: lambda-code-tests
         S3Key: !Sub "${RepoName}/lambda_code.zip"
@@ -113,7 +113,7 @@ Resources:
         Variables:
           QUEUE_URL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${DefaultQueue.QueueName}"
 
-  LambdaExecutionRole:
+  DefaultExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -143,8 +143,54 @@ Resources:
                 Action:
                   - 'sqs:SendMessage'
                 Resource: !GetAtt DefaultQueue.Arn
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+#      ManagedPolicyArns:
+#        - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+
+  ConnectExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  DisconnectExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
 
   ConnectLambdaInvokePermission:
     Type: AWS::Lambda::Permission
