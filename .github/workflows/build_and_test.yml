@@ -95,7 +95,10 @@ jobs:
 
       - name: Deploy to AWS CloudFormation
         run: |
-          aws cloudformation deploy --template-file cloudformation/template.yml --stack-name '${{ env.REPO_NAME }}' --capabilities CAPABILITY_IAM --parameters ParameterKey=RepoName,ParameterValue='${{ env.REPO_NAME }}' ParameterKey=LambdaCodeVersion,ParameterValue='${{ env.VERSION_ID}}'
+          aws cloudformation deploy --template-file cloudformation/template.yml \
+          --stack-name '${{ env.REPO_NAME }}' \
+          --capabilities CAPABILITY_IAM \
+          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID}}'
 
 #      - name: Deploy to AWS CloudFormation
 #        id: create-stack
