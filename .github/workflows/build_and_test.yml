@@ -56,16 +56,29 @@ jobs:
         run: |
           zip -r lambda_code.zip src
 
+      - name: Check if poetry.lock has changed
+        id: check_lockfile_changes
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- poetry.lock)
+          if [ -n "$CHANGED" ]; then
+            echo "::set-output name=lockfile_changed::true"
+          else
+            echo "::set-output name=lockfile_changed::false"
+          fi
+
       - name: Poetry Install
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
         uses: knowsuchagency/poetry-install@v2
 
       - name: Export requirements
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
         run: |
           poetry export -f requirements.txt -o requirements.txt
           echo "Requirements list"
           cat requirements.txt
 
       - name: Install requirements in file
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
         run: |
           mkdir -p python
           pip install -r requirements.txt -t python
@@ -100,6 +113,7 @@ jobs:
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
 
       - name: Copy dependencies to s3
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
