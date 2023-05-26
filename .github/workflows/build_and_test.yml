@@ -141,6 +141,7 @@ jobs:
             echo "STAGE=prod" >> $GITHUB_ENV
           else
             echo "STAGE=${{ steps.extract_branch.outputs.branch }}" >> $GITHUB_ENV
+          fi
 
       - name: Deploy to AWS CloudFormation
         run: |
