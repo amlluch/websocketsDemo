@@ -45,6 +45,12 @@ jobs:
       - name: Generate zip for code
         run: |
           zip -r lambda_code.zip src
+          
+      - name: Generate hash
+        id: generate-hash
+        run: |
+          HASH=$(md5sum lambda_code.zip | awk '{ print $1 }')
+          echo "::set-output name=hash::${HASH}"
 
       - name: Export requirements
         run: |
@@ -96,3 +102,4 @@ jobs:
           capabilities: 'CAPABILITY_IAM'
           parameter-overrides: |
             RepoName=${{ env.REPO_NAME }}
+            LambdaCodeVersion=${{ steps.generate-hash.outputs.hash }}
