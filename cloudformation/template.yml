@@ -91,7 +91,7 @@ Resources:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
-      FunctionName: WebsocketsDemo-disconnect
+      FunctionName: WebsocketsDemo-default
       Layers:
         - !Ref DependenciesLambdaLayer
       Environment:
