@@ -36,11 +36,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python Environment
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-
       - name: Check if src has changed
         id: check_changes
         run: |
@@ -65,6 +60,12 @@ jobs:
           else
             echo "::set-output name=lockfile_changed::false"
           fi
+
+      - name: Set up Python Environment
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
 
       - name: Poetry Install
         if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
