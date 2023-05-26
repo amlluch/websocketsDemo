@@ -82,6 +82,19 @@ Resources:
       Layers:
         - !Ref DependenciesLambdaLayer
 
+  DefaultLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: src.lambda.default.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: lambda-code-tests
+        S3Key: "websocketsDemo/lambda_code.zip"
+      Runtime: python3.9
+      FunctionName: WebsocketsDemo-disconnect
+      Layers:
+        - !Ref DependenciesLambdaLayer
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -123,6 +136,14 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$disconnect"
 
+  DefaultLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt DefaultLambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$default"
+
   DependenciesLambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
@@ -156,6 +177,14 @@ Resources:
       AuthorizationType: NONE
       Target: !Sub "integrations/${DisconnectIntegration}"
 
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      Target: !Sub "integrations/${DefaultIntegration}"
+
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -178,15 +207,8 @@ Resources:
       ApiId: !Ref WebSocketApi
       Description: Default Integration
       IntegrationType: AWS_PROXY
-      IntegrationMethod: POST
-      IntegrationUri:
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:sqs:action/SendMessage/${DefaultQueue}
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultLambda.Arn}/invocations"
       CredentialsArn: !GetAtt WebsocketsSQSIAMRole.Arn
-      PassthroughBehavior: WHEN_NO_TEMPLATES
-      RequestParameters:
-        "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
-      RequestTemplates:
-        "application/json": "Action=SendMessage&MessageBody=$input.body"
 
   WebSocketApiStage:
     Type: AWS::ApiGatewayV2::Stage
