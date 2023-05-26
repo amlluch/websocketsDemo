@@ -73,7 +73,7 @@ jobs:
 
       - name: Get bucket code version Id
         run: |
-          VERSION_ID=$(aws s3api list-objects-versions --bucket lambda-code-tests --key=${{ env.REPO_NAME }}/lambda_code.zip --query 'Versions[?IsLatest==`true`].VersionId' --output text)
+          VERSION_ID=$(aws s3api list-object-versions --bucket lambda-code-tests --key=${{ env.REPO_NAME }}/lambda_code.zip --query 'Versions[?IsLatest==`true`].VersionId' --output text)
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
           echo ${{ env.VERSION_ID }}
 
