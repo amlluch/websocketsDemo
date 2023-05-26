@@ -138,10 +138,13 @@ jobs:
       - name: Set stage variable
         shell: bash
         run: |
-          if [ "${{ steps.extract_branch.outputs.branch }}" = "master" ]; then
+          BRANCH="${{ steps.extract_branch.outputs.branch }}"
+          if [ "$BRANCH" = "master" ]; then
             echo "STAGE=prod" >> $GITHUB_ENV
+          elif [ "$BRANCH" = "dev" ] || [ "$BRANCH" = "test" ]; then
+            echo "STAGE=$BRANCH" >> $GITHUB_ENV
           else
-            echo "STAGE=${{ steps.extract_branch.outputs.branch }}" >> $GITHUB_ENV
+            echo "STAGE=dev" >> $GITHUB_ENV
           fi
 
       - name: Deploy to AWS CloudFormation
