@@ -80,9 +80,10 @@ jobs:
 
       - name: Get bucket code version Id
         run: |
-          VERSION_ID=$(aws s3api list-object-versions --bucket lambda-code-tests --prefix ${{ env.REPO_NAME }}/lambda_code.zip --query 'Versions[?IsLatest==`true`].VersionId' --output text)
+          VERSION_ID=$(aws s3api list-object-versions --bucket lambda-code-tests \
+          --prefix ${{ env.REPO_NAME }}/lambda_code.zip \
+          --query 'Versions[?IsLatest==`true`].VersionId' --output text)
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
-          echo "$VERSION_ID"
 
       - name: Copy dependencies to s3
         uses: prewk/s3-cp-action@v2
@@ -99,14 +100,3 @@ jobs:
           --stack-name '${{ env.REPO_NAME }}' \
           --capabilities CAPABILITY_IAM \
           --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID}}'
-
-#      - name: Deploy to AWS CloudFormation
-#        id: create-stack
-#        uses: aws-actions/aws-cloudformation-github-deploy@v1
-#        with:
-#          name: '${{ env.REPO_NAME }}'
-#          template: 'cloudformation/template.yml'
-#          capabilities: 'CAPABILITY_IAM'
-#          parameter-overrides: |
-#            RepoName='${{ env.REPO_NAME }}'
-#            LambdaCodeVersion='${{ env.VERSION_ID}}'
