@@ -129,9 +129,23 @@ jobs:
           dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
           aws_region: 'eu-west-1'
 
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - name: Set stage variable
+        shell: bash
+        run: |
+          if [ "${{ steps.extract_branch.outputs.branch }}" = "master" ]; then
+            echo "STAGE=prod" >> $GITHUB_ENV
+          else
+            echo "STAGE=${{ steps.extract_branch.outputs.branch }}" >> $GITHUB_ENV
+
       - name: Deploy to AWS CloudFormation
         run: |
           aws cloudformation deploy --template-file cloudformation/template.yml \
           --stack-name '${{ env.REPO_NAME }}' \
           --capabilities CAPABILITY_IAM \
-          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID}}' LambdaLayerVersion='${{ env.DEPENDENCIES_ID}}'
+          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
+          LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}'
