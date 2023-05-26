@@ -94,6 +94,9 @@ Resources:
       FunctionName: WebsocketsDemo-disconnect
       Layers:
         - !Ref DependenciesLambdaLayer
+      Environment:
+        Variables:
+          QUEUE_URL: !Ref DefaultQueueUrl
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
