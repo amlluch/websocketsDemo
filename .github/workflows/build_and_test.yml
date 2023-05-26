@@ -101,5 +101,5 @@ jobs:
           template: 'cloudformation/template.yml'
           capabilities: 'CAPABILITY_IAM'
           parameter-overrides: |
-            RepoName=${{ env.REPO_NAME }}
-            LambdaCodeVersion=$VERSION_ID
+            RepoName='${{ env.REPO_NAME }}'
+            LambdaCodeVersion='${{ env.VERSION_ID}}'
