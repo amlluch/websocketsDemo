@@ -82,7 +82,7 @@ jobs:
         run: |
           VERSION_ID=$(aws s3api list-object-versions --bucket lambda-code-tests --prefix ${{ env.REPO_NAME }}/lambda_code.zip --query 'Versions[?IsLatest==`true`].VersionId' --output text)
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
-          echo ${{ env.VERSION_ID }}
+          echo "$VERSION_ID"
 
       - name: Copy dependencies to s3
         uses: prewk/s3-cp-action@v2
@@ -102,4 +102,4 @@ jobs:
           capabilities: 'CAPABILITY_IAM'
           parameter-overrides: |
             RepoName=${{ env.REPO_NAME }}
-            LambdaCodeVersion=${{ env.VERSION_ID }}
+            LambdaCodeVersion=$VERSION_ID
