@@ -1,0 +1,156 @@
+name: Build and Test
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python Environment
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Poetry Install
+      uses: knowsuchagency/poetry-install@v2
+      with:
+        create-virtualenv: true
+    - name: Install Dependencies
+      run: |
+        poetry install
+    - name: Run Tests
+      run: |
+        poetry run pytest tests/
+
+  deploy:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Check if src has changed
+        id: check_changes
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          if [ -n "$CHANGED" ]; then
+            echo "::set-output name=src_changed::true"
+          else
+            echo "::set-output name=src_changed::false"
+          fi
+
+      - name: Generate zip for code
+        if: steps.check_changes.outputs.src_changed == 'true'
+        run: |
+          zip -r lambda_code.zip src
+
+      - name: Check if poetry.lock has changed
+        id: check_lockfile_changes
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- poetry.lock)
+          if [ -n "$CHANGED" ]; then
+            echo "::set-output name=lockfile_changed::true"
+          else
+            echo "::set-output name=lockfile_changed::false"
+          fi
+
+      - name: Set up Python Environment
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Poetry Install
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        uses: knowsuchagency/poetry-install@v2
+
+      - name: Export requirements
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        run: |
+          poetry export -f requirements.txt -o requirements.txt
+          echo "Requirements list"
+          cat requirements.txt
+
+      - name: Install requirements in file
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        run: |
+          mkdir -p python
+          pip install -r requirements.txt -t python
+          zip -r dependencies_layer.zip python  >/dev/null
+          cd ..
+
+      - name: Get repository name
+        run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d '/' -f2)" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Copy code to s3
+        if: steps.check_changes.outputs.src_changed == 'true'
+        uses: prewk/s3-cp-action@v2
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          source: 'lambda_code.zip'
+          dest: 's3://lambda-code-tests/${{ env.REPO_NAME }}/lambda_code.zip'
+          aws_region: 'eu-west-1'
+
+      - name: Get bucket code version Id
+        run: |
+          VERSION_ID=$(aws s3api list-object-versions --bucket lambda-code-tests \
+          --prefix ${{ env.REPO_NAME }}/lambda_code.zip \
+          --query 'Versions[?IsLatest==`true`].VersionId' --output text)
+          echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
+
+      - name: Copy dependencies to s3
+        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        uses: prewk/s3-cp-action@v2
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          source: 'dependencies_layer.zip'
+          dest: 's3://lambda-dependencies-test/${{ env.REPO_NAME }}/dependencies_layer.zip'
+          aws_region: 'eu-west-1'
+
+      - name: Get bucket dependencies version Id
+        run: |
+          DEPENDENCIES_ID=$(aws s3api list-object-versions --bucket lambda-dependencies-test \
+          --prefix ${{ env.REPO_NAME }}/dependencies_layer.zip \
+          --query 'Versions[?IsLatest==`true`].VersionId' --output text)
+          echo "DEPENDENCIES_ID=$DEPENDENCIES_ID" >> $GITHUB_ENV
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - name: Set stage variable
+        shell: bash
+        run: |
+          BRANCH="${{ steps.extract_branch.outputs.branch }}"
+          if [ "$BRANCH" = "master" ]; then
+            echo "STAGE=prod" >> $GITHUB_ENV
+          elif [ "$BRANCH" = "dev" ] || [ "$BRANCH" = "test" ]; then
+            echo "STAGE=$BRANCH" >> $GITHUB_ENV
+          else
+            echo "STAGE=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy to AWS CloudFormation
+        run: |
+          aws cloudformation deploy --template-file cloudformation/template.yml \
+          --stack-name '${{ env.REPO_NAME }}' \
+          --capabilities CAPABILITY_IAM \
+          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
+          LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}'
