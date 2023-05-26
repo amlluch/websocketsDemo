@@ -96,7 +96,7 @@ Resources:
         - !Ref DependenciesLambdaLayer
       Environment:
         Variables:
-          QUEUE_URL: !Ref DefaultQueueUrl
+          QUEUE_URL: !Ref DefaultQueue.QueueUrl
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
