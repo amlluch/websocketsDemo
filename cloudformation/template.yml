@@ -77,6 +77,12 @@ Resources:
       Code:
         S3Bucket: lambda-code-tests
         S3Key: "websocketsDemo/lambda_code.zip"
+      Metadata:
+        Hash: !Sub
+          - '{"S3Bucket": "${Bucket}", "S3Key": "${Key}", "S3ObjectVersion": "${Version}"}'
+          - Bucket: lambda-code-tests
+            Key: "websocketsDemo/lambda_code.zip"
+            Version: !Ref LambdaCodeVersion
       Runtime: python3.9
       FunctionName: WebsocketsDemo-disconnect
       Layers:
