@@ -15,6 +15,21 @@ Resources:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: 5
 
+  DefaultQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DefaultQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt WebsocketsSQSIAMRole.Arn
+            Action: 'sqs:SendMessage'
+            Resource: !GetAtt DefaultQueue.Arn
+
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
