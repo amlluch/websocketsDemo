@@ -7,6 +7,40 @@ Parameters:
     Description: The name of the GitHub repository
 
 Resources:
+  DefaultQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WebsocketsDefaultQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WebsocketsDeadLetterQueue
+
+  WebsocketsSQSIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - 'apigateway.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: SQSSendMessagePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:SendMessage'
+                Resource: !GetAtt DefaultQueue.Arn
+
   ConnectLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -30,19 +64,6 @@ Resources:
         S3Key: "websocketsDemo/lambda_code.zip"
       Runtime: python3.9
       FunctionName: WebsocketsDemo-disconnect
-      Layers:
-        - !Ref DependenciesLambdaLayer
-
-  DefaultLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      Handler: src.lambda.default.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Code:
-        S3Bucket: lambda-code-tests
-        S3Key: "websocketsDemo/lambda_code.zip"
-      Runtime: python3.9
-      FunctionName: WebsocketsDemo-default
       Layers:
         - !Ref DependenciesLambdaLayer
 
@@ -87,14 +108,6 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$disconnect"
 
-  DefaultLambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt DefaultLambda.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$default"
-
   DependenciesLambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
@@ -128,14 +141,6 @@ Resources:
       AuthorizationType: NONE
       Target: !Sub "integrations/${DisconnectIntegration}"
 
-  DefaultRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteKey: $default
-      AuthorizationType: NONE
-      Target: !Sub "integrations/${DefaultIntegration}"
-
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -157,8 +162,17 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       Description: Default Integration
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultLambda.Arn}/invocations"
+      IntegrationType: AWS
+      IntegrationUri:
+        Fn::Sub:
+          - "arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${QueueName}"
+          - QueueName: !GetAtt DefaultQueue.QueueName
+      CredentialsArn: !GetAtt WebsocketsSQSIAMRole.Arn # IAM Role with permissions to send messages to the SQS queue
+      RequestParameters:
+        "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
+      RequestTemplates:
+        "application/json": "Action=SendMessage&MessageBody=$input.body"
+      PassthroughBehavior: "WHEN_NO_TEMPLATES"
 
   WebSocketApiStage:
     Type: AWS::ApiGatewayV2::Stage
