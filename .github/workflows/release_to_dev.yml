@@ -5,6 +5,43 @@ on:
     types: [published]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Verify tag on dev branch
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          if git branch --contains $TAG_COMMIT | grep -q 'dev'; then
+            echo "Tag is on 'dev' branch. Proceeding with the workflow..."
+          else
+            echo "Tag is not on 'dev' branch. Aborting..."
+            exit 1
+          fi
+
+  build:
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Poetry Install
+        uses: knowsuchagency/poetry-install@v2
+        with:
+          create-virtualenv: true
+      - name: Install Dependencies
+        run: |
+          poetry install
+      
+
   test:
     runs-on: ubuntu-latest
 
