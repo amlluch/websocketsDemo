@@ -307,7 +307,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteKey: $default
+      RouteKey: sendMessage
       AuthorizationType: NONE
       Target: !Sub "integrations/${SendMessageIntegration}"
 
