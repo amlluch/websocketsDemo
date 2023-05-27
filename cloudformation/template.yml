@@ -113,6 +113,20 @@ Resources:
         Variables:
           QUEUE_URL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${DefaultQueue.QueueName}"
 
+  SendMessageLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: src.lambda.send_message.handler
+      Role: !GetAtt SendMessageExecutionRole.Arn
+      Code:
+        S3Bucket: lambda-code-tests
+        S3Key: !Sub "${RepoName}/lambda_code.zip"
+        S3ObjectVersion: !Ref LambdaCodeVersion
+      Runtime: python3.9
+      FunctionName: WebsocketsDemo-send-message
+      Layers:
+        - !Ref DependenciesLambdaLayer
+
   DefaultExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -170,6 +184,29 @@ Resources:
                 Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
 
   DisconnectExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+  SendMessageExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
