@@ -149,16 +149,15 @@ jobs:
 
       - name: Deploy to AWS CloudFormation
         run: |
+          aws cloudformation create-change-set --template-file cloudformation/template.yml \
+          --stack-name '${{ env.REPO_NAME }}' --capabilities CAPABILITY_IAM \
+          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
+          LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}' \
+          --change-set-name temp-change-set
+          
+          aws cloudformation execute-change-set --change-set-name temp-change-set
 #          aws cloudformation deploy --template-file cloudformation/template.yml \
 #          --stack-name '${{ env.REPO_NAME }}' \
 #          --capabilities CAPABILITY_IAM \
 #          --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
 #          LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}'
-           aws cloudformation create-change-set --template-file cloudformation/template.yml \
-           --stack-name '${{ env.REPO_NAME }}' \
-           --capabilities CAPABILITY_IAM \
-           --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
-           LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}' \
-          --change-set-name temp-change-set
-           aws cloudformation execute-change-set \
-           --change-set-name temp-change-set
