@@ -1,7 +1,8 @@
 name: Build and Test
 
 on:
-  create:
+  tag:
+    - r*
 
 jobs:
   setup:
@@ -18,10 +19,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          # Set up GitHub CLI
-          #gh config set git_protocol ssh
-          #echo "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" | gh auth login --with-token
-          #gh auth status
         
           # Check if a tag was created and if it matches the correct format
           if [[ "${{ github.event.ref_type }}" != "tag" ]]; then
@@ -72,7 +69,7 @@ jobs:
           fi
           
           # Create a new release with the new tag
-          gh release create $new_tag
+          gh release create $new_tag -p
           
           # Delete the input tag
           gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
