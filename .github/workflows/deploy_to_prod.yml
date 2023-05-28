@@ -18,10 +18,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          #          # Set up GitHub CLI
-          #          gh config set git_protocol ssh
-          #          echo "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" | gh auth login --with-token
-          #          gh auth status
+          # Set up GitHub CLI
+          gh config set git_protocol ssh
+          echo "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" | gh auth login --with-token
+          gh auth status
         
           # Check if a tag was created and if it matches the correct format
           if [[ "${{ github.event.ref_type }}" != "tag" ]]; then
