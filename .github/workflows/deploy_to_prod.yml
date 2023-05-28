@@ -38,6 +38,7 @@ jobs:
           
           # Get the latest release tag
           latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
+          echo "Aqui el ultimo $latest_tag"
           
           # Extract the current version number
           base_string=$(echo $latest_tag | cut -c2-)
@@ -48,6 +49,7 @@ jobs:
           
           # Create a new tag based on the input
           input_tag=${{ github.event.ref }}
+          echo "Aqui el actual tag: $input_tag"
           if [[ $input_tag == 'v' ]]; then
             v_major=$((v_major+1))
             v_minor=0
@@ -73,7 +75,7 @@ jobs:
           fi
           
           # Delete the input tag and the release
-          echo "Deleting tag $input_tag y release $release_id"
+          echo "Deleting tag $input_tag and release $release_id"
           release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
           
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
