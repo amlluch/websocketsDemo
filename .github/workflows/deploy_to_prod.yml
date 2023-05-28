@@ -34,7 +34,7 @@ jobs:
           
           # Set up GitHub CLI
           gh config set git_protocol ssh
-          echo "${GH_TOKEN}" | gh auth login --with-token
+          echo "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" | gh auth login --with-token
           gh auth status
           
           # Get the latest release tag
