@@ -123,6 +123,7 @@ jobs:
         id: check_changes
         run: |
           #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          git fetch --tags
           # Get the tags for the last two releases
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --skip=1 --max-count=1))
