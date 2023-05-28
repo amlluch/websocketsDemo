@@ -72,16 +72,17 @@ jobs:
             exit 1
           fi
           
-          # Create and publish a new release with the new tag
-          echo "The new release is $new_tag"
-          gh release create $new_tag -t "Release $new_tag" -n "Notes for release $new_tag" -p
-          
           # Delete the input tag and the release
           echo "Deleting tag $input_tag y release $release_id"
           release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
           
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
           gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+          
+          # Create and publish a new release with the new tag
+          echo "The new release is $new_tag"
+          gh release create $new_tag -t "Release $new_tag" -n "Notes for release $new_tag" -p
+          
 
   test:
     needs: [setup]
