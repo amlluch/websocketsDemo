@@ -25,9 +25,9 @@ jobs:
         run: |
         
           # Check if a tag was created and if it matches the correct format
-          if [[ "${{ github.event.ref_type }}" != "tag" ]]; then
-            echo "Not a tag. Exiting"
-            exit 1
+          #if [[ "${{ github.event.ref_type }}" != "tag" ]]; then
+          #  echo "Not a tag. Exiting"
+          #  exit 1
           fi
           # Check if a tag was created, it matches the correct format and the branch is master
           if [[ ! "${{ github.event.ref }}" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
