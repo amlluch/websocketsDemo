@@ -1,11 +1,89 @@
 name: Build and Test
 
 on:
-  push:
-    branches: [master]
+  create:
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          # Check if a tag was created, it matches the correct format and the branch is master
+          if [[ "${{ github.event.ref_type }}" != "tag" || ! "${{ github.event.ref }}" =~ ^r([0-9]+(\.[0-9]+)?)?$ || "${{ github.ref }}" != "refs/heads/master" ]]; then
+            echo "Not a valid tag or not on master branch, exiting"
+            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ github.event.ref }}
+            exit 0
+          fi
+          # Check if a tag was created and if it matches the correct format
+          if [[ "${{ github.event.ref_type }}" != "tag" ]]; then
+            exit 0
+          fi
+          if ! "${{ github.event.ref }}" =~ ^r([0-9]+(\.[0-9]+)?)?$ ]]; then
+            echo "Not a valid tag, exiting"
+            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ github.event.ref }}
+            exit 0
+          fi
+          
+          # Set up GitHub CLI
+          gh config set git_protocol ssh
+          echo "${GH_TOKEN}" | gh auth login --with-token
+          
+          # Get the latest release tag
+          latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
+          
+          # Extract the current version number
+          base_string=$(echo $latest_tag | cut -c2-)
+          base_array=($(echo "$base_string" | tr '.' '\n'))
+          v_major=${base_array[0]}
+          v_minor=${base_array[1]}
+          v_patch=${base_array[2]}
+          
+          # Create a new tag based on the input
+          input_tag=${{ github.event.ref }}
+          if [[ $input_tag == 'r' ]]; then
+            v_major=$((v_major+1))
+            v_minor=0
+            v_patch=0
+          elif [[ $input_tag == 'r'*'.'* ]]; then
+            v_patch=$((v_patch+1))
+          elif [[ $input_tag == 'r'* ]]; then
+            v_minor=$((v_minor+1))
+            v_patch=0
+          else
+            echo "Invalid input tag"
+            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+            exit 1
+          fi
+          
+          new_tag="r$v_major.$v_minor.$v_patch"
+          
+          # Check if the new tag already exists
+          if gh release view $new_tag; then
+            echo "Tag $new_tag already exists, exiting"
+            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+            exit 0
+          fi
+          
+          # Create a new release with the new tag
+          gh release create $new_tag
+          
+          # Delete the input tag
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
   test:
+    needs: [setup]
     runs-on: ubuntu-latest
 
     steps:
