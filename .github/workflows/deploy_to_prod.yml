@@ -59,7 +59,6 @@ jobs:
           fi
           
           new_tag="r$v_major.$v_minor.$v_patch"
-          echo "este es el new tag $new_tag"
           
           # Check if the new tag already exists
           if gh release view $new_tag; then
