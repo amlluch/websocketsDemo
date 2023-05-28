@@ -3,9 +3,7 @@ name: Build and Test
 on:
   create:
     tags:
-      - r*
-    tags-ignore:
-      - r*.*.*
+      - v*
 
 jobs:
   setup:
@@ -56,13 +54,13 @@ jobs:
           
           # Create a new tag based on the input
           input_tag=${{ github.event.ref }}
-          if [[ $input_tag == 'r' ]]; then
+          if [[ $input_tag == 'v' ]]; then
             v_major=$((v_major+1))
             v_minor=0
             v_patch=0
-          elif [[ $input_tag == 'r'*'.'* ]]; then
+          elif [[ $input_tag == 'v'*'.'* ]]; then
             v_patch=$((v_patch+1))
-          elif [[ $input_tag == 'r'* ]]; then
+          elif [[ $input_tag == 'v'* ]]; then
             v_minor=$((v_minor+1))
             v_patch=0
           else
