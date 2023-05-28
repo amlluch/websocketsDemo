@@ -30,7 +30,7 @@ jobs:
           #  exit 1
           #fi
           # Check if a tag was created, it matches the correct format and the branch is master
-          tag=$(basename $GITHUB_REF)
+          input_tag=$(basename $GITHUB_REF)
           if [[ ! "$tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
             echo "Not a valid tag, exiting"
             # gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ github.event.ref }}
@@ -49,7 +49,7 @@ jobs:
           v_patch=${base_array[2]}
           
           # Create a new tag based on the input
-          input_tag=${{ github.event.ref }}
+          #input_tag=${{ github.event.ref }}
           echo "Aqui el actual tag: $input_tag"
           if [[ $input_tag == 'v' ]]; then
             v_major=$((v_major+1))
