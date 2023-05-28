@@ -12,6 +12,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Stop if not a draft
+        run: |
+          if [[ "${{ github.event.release.draft }}" != "true" ]]; then
+            echo "Not a draft release. Exiting"
+            exit 1
+          fi
+        shell: bash
+
       - name: Install GitHub CLI
         run: |
           curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
