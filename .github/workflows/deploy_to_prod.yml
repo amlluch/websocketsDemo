@@ -39,7 +39,6 @@ jobs:
           
           # Get the latest release tag
           latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
-          echo "Aqui el ultimo $latest_tag"
           
           # Extract the current version number
           base_string=$(echo $latest_tag | cut -c2-)
@@ -49,8 +48,6 @@ jobs:
           v_patch=${base_array[2]}
           
           # Create a new tag based on the input
-          #input_tag=${{ github.event.ref }}
-          echo "Aqui el actual tag: $input_tag"
           if [[ $input_tag == 'v' ]]; then
             v_major=$((v_major+1))
             v_minor=0
@@ -122,7 +119,14 @@ jobs:
       - name: Check if src has changed
         id: check_changes
         run: |
-          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --skip=1 --max-count=1))
+
+          # Compare the tags and set CHANGED
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
+          fi
           if [ -n "$CHANGED" ]; then
             echo "::set-output name=src_changed::true"
           else
