@@ -32,7 +32,7 @@ jobs:
           fi
           
           # Get the latest release tag
-          git fetch --tags
+          git fetch
           latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
           
           # Extract the current version number
@@ -59,6 +59,7 @@ jobs:
           fi
           
           new_tag="r$v_major.$v_minor.$v_patch"
+          echo "este es el new tag $new_tag"
           
           # Check if the new tag already exists
           if gh release view $new_tag; then
