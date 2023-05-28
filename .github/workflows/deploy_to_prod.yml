@@ -138,9 +138,12 @@ jobs:
       - name: Check if poetry.lock has changed
         id: check_lockfile_changes
         run: |
+          echo "previa $PREVIOUS_TAG"
+          echo "ultima $LATEST_TAG"
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
           fi
+          echo "Cambios $CHANGED"
           if [ -n "$CHANGED" ]; then
             echo "::set-output name=lockfile_changed::true"
           else
