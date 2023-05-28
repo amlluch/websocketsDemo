@@ -38,7 +38,7 @@ jobs:
           fi
           
           # Get the latest release tag
-          git fetch tags
+          git fetch --tags
           latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
           echo "este es el ultimo tag $latest_tag"
           
