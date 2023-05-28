@@ -84,7 +84,7 @@ jobs:
           
           # Create and publish a new release with the new tag
           echo "The new release is $new_tag"
-          gh release create $new_tag -t "Release $new_tag" -n "Notes for release $new_tag"
+          gh release create $new_tag -t "$new_tag" -n "Notes for release $new_tag"
           
 
   test:
