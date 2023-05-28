@@ -1,8 +1,9 @@
 name: Build and Test
 
 on:
-  tags:
-    - r*
+  create:
+    tags:
+      - r*
 
 jobs:
   setup:
