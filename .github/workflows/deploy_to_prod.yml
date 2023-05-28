@@ -12,13 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Stop if not a pre-release
-        run: |
-          if [[ "${{ github.event.release.prerelease }}" != "true" ]]; then
-            echo "Not a pre-release. Exiting"
-            exit 1
-          fi
-        shell: bash
+      - name: Run when draft release is created
+        run: exit 1
+        if: github.event.release.prerelease == false
 
       - name: Install GitHub CLI
         run: |
