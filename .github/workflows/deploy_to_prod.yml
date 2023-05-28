@@ -114,8 +114,8 @@ jobs:
       - name: Check if src has changed
         id: check_changes
         run: |
-          git fetch
           # Get the tags for the last two releases
+          git fetch
           LATEST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1))
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
 
