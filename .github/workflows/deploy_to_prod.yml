@@ -14,8 +14,8 @@ jobs:
 
       - name: Stop if not a draft
         run: |
-          if [[ "${{ github.event.release.draft }}" != "true" ]]; then
-            echo "Not a draft release. Exiting"
+          if [[ "${{ github.event.release.prerelease }}" != "true" ]]; then
+            echo "Not a prerelease. Exiting"
             exit 1
           fi
         shell: bash
