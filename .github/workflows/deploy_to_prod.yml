@@ -31,7 +31,7 @@ jobs:
           #fi
           # Check if a tag was created, it matches the correct format and the branch is master
           input_tag=$(basename $GITHUB_REF)
-          if [[ ! "$tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
+          if [[ ! "$input_tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
             echo "Not a valid tag, exiting"
             # gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ github.event.ref }}
             exit 1
