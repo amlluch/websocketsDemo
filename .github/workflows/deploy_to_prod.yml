@@ -4,6 +4,8 @@ on:
   create:
     tags:
       - r*
+    tags-ignore:
+      - r*.*.*
 
 jobs:
   setup:
