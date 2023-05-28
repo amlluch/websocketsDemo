@@ -13,7 +13,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run when draft release is created
-        run: exit 1
+        run: |
+          echo "Estado de prerelease $github.event.release.prerelease"
+          exit 1
         if: github.event.release.prerelease == false
 
       - name: Install GitHub CLI
