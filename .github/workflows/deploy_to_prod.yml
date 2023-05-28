@@ -146,7 +146,10 @@ jobs:
       - name: Check if poetry.lock has changed
         id: check_lockfile_changes
         run: |
-          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- poetry.lock)
+          #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- poetry.lock)
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
+          fi
           if [ -n "$CHANGED" ]; then
             echo "::set-output name=lockfile_changed::true"
           else
