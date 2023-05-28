@@ -118,8 +118,8 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | sort -V | tail -n 1)
-          PREVIOUS_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
+          LATEST_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
+          PREVIOUS_TAG=$(git tag | sort -V | tail -n 3 | head -n 1)
           echo "previa para src $PREVIOUS_TAG"
           echo "ultima para src $LATEST_TAG"
 
@@ -144,8 +144,8 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | sort -V | tail -n 1)
-          PREVIOUS_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
+          LATEST_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
+          PREVIOUS_TAG=$(git tag | sort -V | tail -n 3 | head -n 1)
           echo "previa $PREVIOUS_TAG"
           echo "ultima $LATEST_TAG"
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
