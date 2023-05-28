@@ -122,7 +122,6 @@ jobs:
       - name: Check if src has changed
         id: check_changes
         run: |
-          #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
           git fetch --tags
           # Get the tags for the last two releases
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -146,7 +145,6 @@ jobs:
       - name: Check if poetry.lock has changed
         id: check_lockfile_changes
         run: |
-          #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- poetry.lock)
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
           fi

@@ -14,6 +14,5 @@ def handler(event: Dict, context: Context) -> Dict:
         QueueUrl=queue_url,
         MessageBody=json.dumps(event)
     )
-    print("response", response)
     print("event", event)
     return {"statusCode": 200}
