@@ -39,6 +39,7 @@ jobs:
           
           # Get the latest release tag
           latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
+          echo "este es el ultimo tag $latest_tag"
           
           # Extract the current version number
           base_string=$(echo $latest_tag | cut -c2-)
