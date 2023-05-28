@@ -72,8 +72,8 @@ jobs:
             exit 1
           fi
           
-          # Create a new release with the new tag
-          gh release create $new_tag -p
+          # Create and publish a new release with the new tag
+          gh release create $new_tag -t "Release $new_tag" -n "Notes for release $new_tag" -p
           
           # Delete the input tag and the release
           release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
