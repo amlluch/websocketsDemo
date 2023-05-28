@@ -12,12 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run when draft release is created
-        run: |
-          echo "Estado de prerelease ${{ github.event.release.prerelease }}"
-          exit 1
-        if: github.event.release.prerelease == false
-
       - name: Install GitHub CLI
         run: |
           curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
@@ -36,7 +30,7 @@ jobs:
             exit 1
           fi
           # Check if a tag was created, it matches the correct format and the branch is master
-          if [[ ! "${{ github.event.ref }}" =~ ^r([0-9]+(\.[0-9]+)?)?$ ]]; then
+          if [[ ! "${{ github.event.ref }}" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
             echo "Not a valid tag, exiting"
             # gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ github.event.ref }}
             exit 1
