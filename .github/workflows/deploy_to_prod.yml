@@ -120,13 +120,12 @@ jobs:
         id: check_changes
         run: |
           #CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- src)
+          # Get the tags for the last two releases
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --skip=1 --max-count=1))
 
-          # Compare the tags and set CHANGED
-          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
-            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
-          fi
+          # Perform the diff and assign it to a variable
+          CHANGES=$(git diff --name-only $PREVIOUS_TAG..$LATEST_TAG)
           if [ -n "$CHANGED" ]; then
             echo "::set-output name=src_changed::true"
           else
