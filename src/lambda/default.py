@@ -1,9 +1,8 @@
 import json
+import os
 from typing import Dict
 
 import boto3
-import os
-
 from aws_lambda_typing.context import Context
 
 
@@ -14,5 +13,6 @@ def handler(event: Dict, context: Context) -> Dict:
         QueueUrl=queue_url,
         MessageBody=json.dumps(event)
     )
+    print(response)
     print("event", event)
     return {"statusCode": 200}

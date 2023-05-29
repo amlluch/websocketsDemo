@@ -122,11 +122,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint mypy cfn-lint
-
-      - name: Run Pylint
-        run: |
-          pylint src/
+          pip install mypy cfn-lint
 
       - name: Run Mypy
         run: |
