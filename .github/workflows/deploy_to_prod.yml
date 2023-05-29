@@ -148,6 +148,7 @@ jobs:
         run: |
           prefix=$(cat prefix.txt)
           echo "prefix=$prefix" >> $GITHUB_ENV
+          echo "Aqui tengo el prefix: $env.prefix"
 
       - name: Check if src has changed
         id: check_changes
