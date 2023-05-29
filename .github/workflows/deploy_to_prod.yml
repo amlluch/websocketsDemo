@@ -140,16 +140,14 @@ jobs:
       - name: Set prefix
         id: set_prefix
         run: |
-          echo "Estoy en el branch: $env.branch"
-          if [[ "$env.branch" == "master" ]]; then
+          echo "Estoy en el branch: $branch"
+          if [[ "$branch" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$branch" == "test" ]]; then
             echo "prefix=t" >> $GITHUB_ENV
           else
             echo "prefix=d" >> $GITHUB_ENV
           fi
-
-          echo "Aqui tengo el prefix: $env.prefix"
 
       - name: Check if src has changed
         id: check_changes
@@ -186,6 +184,7 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
+          echo "Dentro del has changed de poetry lock el prefix es ${{ env.prefix }}"
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
 
