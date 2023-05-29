@@ -106,10 +106,38 @@ jobs:
           # Create and publish a new release with the new tag
           echo "The new release is $new_tag"
           gh release create $new_tag -t "$new_tag" -n "Notes for release $new_tag"
-          
+
+  build:
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint mypy cfn-lint
+
+      - name: Run Pylint
+        run: |
+          pylint src/
+
+      - name: Run Mypy
+        run: |
+          mypy src/
+
+      - name: Run cfn-lint
+        run: |
+          cfn-lint cloudformation/*
 
   test:
-    needs: [setup]
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
@@ -150,25 +178,6 @@ jobs:
           SETUP_PREFIX=$(cat prefix.txt)
           echo "PREFIX is $SETUP_PREFIX"
           echo "prefix=$SETUP_PREFIX" >> $GITHUB_ENV
-
-#      - name: Extract branch name
-#        shell: bash
-#        run: |
-#          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-#          echo "$branch"
-#        id: extract_branch
-
-#      - name: Set prefix
-#        id: set_prefix
-#        run: |
-#          echo "Estoy en el prefix: ${{ env.SETUP_PREFIX }}"
-#          if [[ "${{ env.SETUP_PREFIX }}" == "master" ]]; then
-#            echo "prefix=r" >> $GITHUB_ENV
-#          elif [[ "${{ env.SETUP_PREFIX }}" == "test" ]]; then
-#            echo "prefix=t" >> $GITHUB_ENV
-#          else
-#            echo "prefix=d" >> $GITHUB_ENV
-#          fi
 
       - name: Check if src has changed
         id: check_changes
@@ -236,7 +245,7 @@ jobs:
       - name: Export requirements
         if: env.lockfile_changed == 'true'
         run: |
-          poetry export -f requirements.txt -o requirements.txt
+          poetry export --no-dev -f requirements.txt -o requirements.txt
           echo "Requirements list"
           cat requirements.txt
 
