@@ -22,9 +22,15 @@ jobs:
         run: sudo apt-get install -y jq
 
       - name: Set prefix and branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         id: set_prefix
         run: |
           git branch --show-current
+          COMMIT_HASH=$(gh api repos/:owner/:repo/releases/tags/:tag --jq '.target_commitish')
+          BRANCHES=$(git branch -r --contains "$COMMIT_HASH")
+          echo "Las ramas $BRANCHES"
+          
           BRANCH_NAME=${GITHUB_REF##*/}
           echo "El nombre del branch es $BRANCH_NAME"
           branch=$(git branch --contains "$BRANCH_NAME")
