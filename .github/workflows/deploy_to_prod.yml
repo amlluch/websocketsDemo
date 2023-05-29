@@ -26,6 +26,8 @@ jobs:
         run: |
           BRANCH_NAME=${GITHUB_REF##*/}
           echo "El nombre del branch es $BRANCH_NAME"
+          branch=$(git branch --contains "$BRANCH_NAME")
+          echo "Pero deberia ser esta $BRANCH_NAME"
           if [[ "$BRANCH_NAME" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$BRANCH_NAME" == "test" ]]; then
