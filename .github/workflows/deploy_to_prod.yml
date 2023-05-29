@@ -149,7 +149,7 @@ jobs:
         run: |
           SETUP_PREFIX=$(cat prefix.txt)
           echo "PREFIX is $SETUP_PREFIX"
-          echo "SETUP_PREFIX=d" >> $GITHUB_ENV
+          echo "SETUP_PREFIX=$SETUP_PREFIX" >> $GITHUB_ENV
 
 #      - name: Extract branch name
 #        shell: bash
@@ -161,10 +161,10 @@ jobs:
       - name: Set prefix
         id: set_prefix
         run: |
-          echo "Estoy en el prefix: $env.SETUP_PREFIX"
-          if [[ "$env.SETUP_PREFIX" == "master" ]]; then
+          echo "Estoy en el prefix: ${{ env.SETUP_PREFIX }}"
+          if [[ "${{ env.SETUP_PREFIX }}" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
-          elif [[ "$env.SETUP_PREFIX" == "test" ]]; then
+          elif [[ "${{ env.SETUP_PREFIX }}" == "test" ]]; then
             echo "prefix=t" >> $GITHUB_ENV
           else
             echo "prefix=d" >> $GITHUB_ENV
