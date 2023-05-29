@@ -132,12 +132,15 @@ jobs:
 
       - name: Extract branch name
         shell: bash
-        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        run: |
+          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+          echo "$branch"
         id: extract_branch
 
       - name: Set prefix
         id: set_prefix
         run: |
+          echo "Estoy en el branch: $env.branch"
           if [[ "$env.branch" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$branch" == "test" ]]; then
