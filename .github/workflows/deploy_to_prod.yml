@@ -293,7 +293,7 @@ jobs:
       - name: Set stage variable
         shell: bash
         run: |
-          PFX="${{ env.SETUP_PREFIX }}"
+          PFX="${{ env.prefix }}"
           if [ "$PFX" = "r" ]; then
             echo "STAGE=prod" >> $GITHUB_ENV
           elif [ "$PFX" = "t" ]; then
