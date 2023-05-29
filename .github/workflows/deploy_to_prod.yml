@@ -26,12 +26,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
         
-          # Check if a tag was created, it matches the correct format and the branch is master
           input_tag=$(basename $GITHUB_REF)
-          #if [[ ! "$input_tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
-          #  echo "Not a valid tag, exiting"
-          #  exit 1
-          #fi
           
           # Get the latest release tag
           git fetch
@@ -129,13 +124,13 @@ jobs:
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
           fi
           if [ -n "$CHANGED" ]; then
-            echo "::set-output name=src_changed::true"
+            echo "src_changed=true" >> $GITHUB_ENV
           else
-            echo "::set-output name=src_changed::false"
+            echo "src_changed=false" >> $GITHUB_ENV
           fi
 
       - name: Generate zip for code
-        if: steps.check_changes.outputs.src_changed == 'true'
+        if: env.src_changed == 'true'
         run: |
           zip -r lambda_code.zip src
 
@@ -154,30 +149,30 @@ jobs:
           fi
           echo "Cambios $CHANGED"
           if [ -n "$CHANGED" ]; then
-            echo "::set-output name=lockfile_changed::true"
+            echo "lockfile_changed=true" >> $GITHUB_ENV
           else
-            echo "::set-output name=lockfile_changed::false"
+            echo "lockfile_changed=false" >> $GITHUB_ENV
           fi
 
       - name: Set up Python Environment
-        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        if: env.lockfile_changed == 'true'
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
 
       - name: Poetry Install
-        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        if: env.lockfile_changed == 'true'
         uses: knowsuchagency/poetry-install@v2
 
       - name: Export requirements
-        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        if: env.lockfile_changed == 'true'
         run: |
           poetry export -f requirements.txt -o requirements.txt
           echo "Requirements list"
           cat requirements.txt
 
       - name: Install requirements in file
-        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        if: env.lockfile_changed == 'true'
         run: |
           mkdir -p python
           pip install -r requirements.txt -t python
@@ -195,7 +190,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Copy code to s3
-        if: steps.check_changes.outputs.src_changed == 'true'
+        if: env.src_changed == 'true'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -212,7 +207,7 @@ jobs:
           echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
 
       - name: Copy dependencies to s3
-        if: steps.check_lockfile_changes.outputs.lockfile_changed == 'true'
+        if: env.lockfile_changed == 'true'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
