@@ -150,12 +150,12 @@ jobs:
           SETUP_PREFIX=$(cat prefix.txt)
           echo "PREFIX is $SETUP_PREFIX"
 
-      - name: Extract branch name
-        shell: bash
-        run: |
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-          echo "$branch"
-        id: extract_branch
+#      - name: Extract branch name
+#        shell: bash
+#        run: |
+#          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+#          echo "$branch"
+#        id: extract_branch
 
       - name: Set prefix
         id: set_prefix
@@ -293,11 +293,11 @@ jobs:
       - name: Set stage variable
         shell: bash
         run: |
-          BRANCH="${{ env.branch }}"
-          if [ "$BRANCH" = "master" ]; then
+          PFX="${{ env.SETUP_PREFIX }}"
+          if [ "$PFX" = "r" ]; then
             echo "STAGE=prod" >> $GITHUB_ENV
-          elif [ "$BRANCH" = "dev" ] || [ "$BRANCH" = "test" ]; then
-            echo "STAGE=$BRANCH" >> $GITHUB_ENV
+          elif [ "$PFX" = "t" ]; then
+            echo "STAGE=test" >> $GITHUB_ENV
           else
             echo "STAGE=dev" >> $GITHUB_ENV
           fi
