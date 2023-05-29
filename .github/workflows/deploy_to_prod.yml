@@ -33,7 +33,7 @@ jobs:
           BRANCHES=$(git branch -r --contains "$BRANCH_NAME@{0}")
           echo "Las ramas $BRANCHES"
           
-          BRANCH_NAME=${GITHUB_REF##*/}
+          BRANCH_NAME=$(echo $BRANCHES | cut -d'/' -f 2)
           echo "El nombre del branch es $BRANCH_NAME"
           branch=$(git branch --contains "$BRANCH_NAME")
           echo "Pero deberia ser esta $branch"
@@ -44,6 +44,14 @@ jobs:
           else
             echo "prefix=d" >> $GITHUB_ENV
           fi
+          
+          echo $prefix > prefix.txt
+
+      - name: Upload prefix as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: prefix
+          path: prefix.txt
 
       - name: Create release
         env:
@@ -132,17 +140,28 @@ jobs:
         with:
           fetch-depth: 0
 
+#      - name: Set prefix
+#        id: set_prefix
+#        run: |
+#          BRANCH_NAME=${GITHUB_REF##*/}
+#          if [[ "$BRANCH_NAME" == "master" ]]; then
+#            echo "prefix=r" >> $GITHUB_ENV
+#          elif [[ "$BRANCH_NAME" == "test" ]]; then
+#            echo "prefix=t" >> $GITHUB_ENV
+#          else
+#            echo "prefix=d" >> $GITHUB_ENV
+#          fi
+
+      - name: Download prefix artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: prefix
+
       - name: Set prefix
         id: set_prefix
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          if [[ "$BRANCH_NAME" == "master" ]]; then
-            echo "prefix=r" >> $GITHUB_ENV
-          elif [[ "$BRANCH_NAME" == "test" ]]; then
-            echo "prefix=t" >> $GITHUB_ENV
-          else
-            echo "prefix=d" >> $GITHUB_ENV
-          fi
+          prefix=$(cat prefix.txt)
+          echo "prefix=$prefix" >> $GITHUB_ENV
 
       - name: Check if src has changed
         id: check_changes
