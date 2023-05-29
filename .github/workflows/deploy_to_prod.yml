@@ -106,6 +106,18 @@ jobs:
           # Create and publish a new release with the new tag
           echo "The new release is $new_tag"
           gh release create $new_tag -t "$new_tag" -n "Notes for release $new_tag"
+          
+          echo "release_tag=$new_tag" >> $GITHUB_ENV
+
+      - name: Write tag to file
+        run: |
+          echo ${{ env.release_tag }} > tag.txt
+
+      - name: Upload tag as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: tag
+          path: tag.txt
 
   build:
     needs: [setup]
@@ -286,15 +298,10 @@ jobs:
         if: env.lockfile_changed == 'true'
         uses: knowsuchagency/poetry-install@v2
 
-      - name: Upgrade poetry
-        if: env.lockfile_changed == 'true'
-        run: |
-          pip install --upgrade poetry
-
       - name: Export requirements
         if: env.lockfile_changed == 'true'
         run: |
-          poetry export --no-dev -f requirements.txt -o requirements.txt
+          poetry export -f requirements.txt -o requirements.txt
           echo "Requirements list"
           cat requirements.txt
 
