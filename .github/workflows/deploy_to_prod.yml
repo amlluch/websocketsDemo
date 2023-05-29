@@ -42,14 +42,6 @@ jobs:
           else
             echo "prefix=d" >> $GITHUB_ENV
           fi
-          
-          echo ${{ env.prefix }} > prefix.txt
-
-      - name: Upload prefix as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: prefix
-          path: prefix.txt
 
       - name: Create release
         env:
@@ -138,16 +130,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download prefix artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: prefix
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        id: extract_branch
 
       - name: Set prefix
         id: set_prefix
         run: |
-          prefix=$(cat prefix.txt)
-          echo "prefix=$prefix" >> $GITHUB_ENV
+          if [[ "$env.branch" == "master" ]]; then
+            echo "prefix=r" >> $GITHUB_ENV
+          elif [[ "$branch" == "test" ]]; then
+            echo "prefix=t" >> $GITHUB_ENV
+          else
+            echo "prefix=d" >> $GITHUB_ENV
+          fi
+
           echo "Aqui tengo el prefix: $env.prefix"
 
       - name: Check if src has changed
@@ -269,11 +267,6 @@ jobs:
           --prefix ${{ env.REPO_NAME }}/dependencies_layer.zip \
           --query 'Versions[?IsLatest==`true`].VersionId' --output text)
           echo "DEPENDENCIES_ID=$DEPENDENCIES_ID" >> $GITHUB_ENV
-
-      - name: Extract branch name
-        shell: bash
-        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-        id: extract_branch
 
       - name: Set stage variable
         shell: bash
