@@ -16,7 +16,8 @@ jobs:
 
       - name: Install GitHub CLI
         run: |
-          curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
+          curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz \
+          | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
 
       - name: Install jq
         run: sudo apt-get install -y jq
@@ -31,7 +32,6 @@ jobs:
           TAG_NAME=${GITHUB_REF##*/}
           COMMIT_HASH=$(gh api repos/${{ github.repository }}/releases/tags/$TAG_NAME --jq '.target_commitish')
           BRANCHES=$(git branch -r --contains "$BRANCH_NAME@{0}")
-          echo "Las ramas $BRANCHES"
           
           BRANCH_NAME=$(echo $BRANCHES | cut -d'/' -f 2)
 
@@ -138,18 +138,6 @@ jobs:
         with:
           fetch-depth: 0
 
-#      - name: Set prefix
-#        id: set_prefix
-#        run: |
-#          BRANCH_NAME=${GITHUB_REF##*/}
-#          if [[ "$BRANCH_NAME" == "master" ]]; then
-#            echo "prefix=r" >> $GITHUB_ENV
-#          elif [[ "$BRANCH_NAME" == "test" ]]; then
-#            echo "prefix=t" >> $GITHUB_ENV
-#          else
-#            echo "prefix=d" >> $GITHUB_ENV
-#          fi
-
       - name: Download prefix artifact
         uses: actions/download-artifact@v2
         with:
@@ -169,8 +157,6 @@ jobs:
           git fetch
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
-          echo "previa para src $PREVIOUS_TAG"
-          echo "ultima para src $LATEST_TAG"
 
           # Compare the tags and set CHANGED
           if [ -z "$PREVIOUS_TAG" ]; then
@@ -200,8 +186,7 @@ jobs:
           git fetch
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
-          echo "previa $PREVIOUS_TAG"
-          echo "ultima $LATEST_TAG"
+
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "src_changed=true" >> $GITHUB_ENV
             exit 0
@@ -209,7 +194,6 @@ jobs:
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
           fi
-          echo "Cambios $CHANGED"
           if [ -n "$CHANGED" ]; then
             echo "lockfile_changed=true" >> $GITHUB_ENV
           else
@@ -287,13 +271,13 @@ jobs:
 
       - name: Extract branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
         id: extract_branch
 
       - name: Set stage variable
         shell: bash
         run: |
-          BRANCH="${{ steps.extract_branch.outputs.branch }}"
+          BRANCH="${{ env.branch }}"
           if [ "$BRANCH" = "master" ]; then
             echo "STAGE=prod" >> $GITHUB_ENV
           elif [ "$BRANCH" = "dev" ] || [ "$BRANCH" = "test" ]; then
