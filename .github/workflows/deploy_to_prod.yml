@@ -26,7 +26,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         id: set_prefix
         run: |
-          git branch --show-current
+          git fetch
+
           TAG_NAME=${GITHUB_REF##*/}
           COMMIT_HASH=$(gh api repos/${{ github.repository }}/releases/tags/$TAG_NAME --jq '.target_commitish')
           BRANCHES=$(git branch -r --contains "$COMMIT_HASH")
