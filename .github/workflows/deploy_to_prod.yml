@@ -114,19 +114,67 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: prefix
+
+      - name: Read prefix
+        run: |
+          SETUP_PREFIX=$(cat prefix.txt)
+          echo "PREFIX is $SETUP_PREFIX"
+          echo "prefix=$SETUP_PREFIX" >> $GITHUB_ENV
+
+      - name: Check if src has changed
+        id: check_changes
+        run: |
+          # Get the tags for the last two releases
+
+          git fetch
+          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
+
+          # Compare the tags and set CHANGED
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "src_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "src_changed=true" >> $GITHUB_ENV
+          else
+            echo "src_changed=false" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Python Environment
+        if: env.src_changed == 'true'
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Poetry Install
+        if: env.src_changed == 'true'
+        uses: knowsuchagency/poetry-install@v2
+        with:
+          create-virtualenv: true
+
+      - name: Install Dependencies
+        if: env.src_changed == 'true'
+        run: |
+          poetry install
+
+      - name: Run mypy
+        if: env.src_changed == 'true'
+        run: |
+          poetry run mypy src/
+
+      - name: Install cfnlinter
         run: |
           python -m pip install --upgrade pip
-          pip install mypy cfn-lint
-
-      - name: Run Mypy
-        run: |
-          mypy src/
+          pip install cfn-lint
 
       - name: Run cfn-lint
         run: |
