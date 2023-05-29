@@ -30,7 +30,7 @@ jobs:
 
           TAG_NAME=${GITHUB_REF##*/}
           COMMIT_HASH=$(gh api repos/${{ github.repository }}/releases/tags/$TAG_NAME --jq '.target_commitish')
-          BRANCHES=$(git branch -r --contains "$COMMIT_HASH")
+          BRANCHES=$(git branch -r --contains "$BRANCH_NAME@{0}")
           echo "Las ramas $BRANCHES"
           
           BRANCH_NAME=${GITHUB_REF##*/}
