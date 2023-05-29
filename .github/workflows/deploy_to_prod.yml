@@ -402,6 +402,8 @@ jobs:
           run: sudo apt-get install -y jq
 
         - name: Delete release and tag
+          env:
+            GITHUB_TOKEN: ${{ secrets.TOKEN }}
           run: |
             release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.input_tag }} | jq .id)
             
