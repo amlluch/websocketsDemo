@@ -25,6 +25,7 @@ jobs:
         id: set_prefix
         run: |
           BRANCH_NAME=${GITHUB_REF##*/}
+          echo "El nombre del branch es $BRANCH_NAME"
           if [[ "$BRANCH_NAME" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$BRANCH_NAME" == "test" ]]; then
