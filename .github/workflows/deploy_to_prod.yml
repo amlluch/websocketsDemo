@@ -3,9 +3,9 @@ name: Build and Test
 on:
   push:
     tags:
-      - patch*
-      - minor*
-      - major*
+      - patch
+      - minor
+      - major
 
 jobs:
   setup:
@@ -34,9 +34,7 @@ jobs:
           echo "Las ramas $BRANCHES"
           
           BRANCH_NAME=$(echo $BRANCHES | cut -d'/' -f 2)
-          echo "El nombre del branch es $BRANCH_NAME"
-          branch=$(git branch --contains "$BRANCH_NAME")
-          echo "Pero deberia ser esta $branch"
+
           if [[ "$BRANCH_NAME" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$BRANCH_NAME" == "test" ]]; then
