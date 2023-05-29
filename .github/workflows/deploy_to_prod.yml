@@ -21,6 +21,18 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
+      - name: Set prefix
+        id: set_prefix
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          if [[ "$BRANCH_NAME" == "master" ]]; then
+            echo "prefix=r" >> $GITHUB_ENV
+          elif [[ "$BRANCH_NAME" == "test" ]]; then
+            echo "prefix=t" >> $GITHUB_ENV
+          else
+            echo "prefix=d" >> $GITHUB_ENV
+          fi
+
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -30,10 +42,10 @@ jobs:
           
           # Get the latest release tag
           git fetch
-          latest_tag=$(gh release list --repo ${{ github.repository }} | grep '^r' | cut -f1 | sort --version-sort | tail -n1)
+          latest_tag=$(gh release list --repo ${{ github.repository }} | grep "^${{ env.prefix }}" | cut -f1 | sort --version-sort | tail -n1)
           
           # Extract the current version number
-          base_string=$(echo $latest_tag | cut -c2-)
+          base_string=$(echo ${latest_tag:-"${{ env.prefix }}0.0.0"} | cut -c2-)
           base_array=($(echo "$base_string" | tr '.' '\n'))
           v_major=${base_array[0]}
           v_minor=${base_array[1]}
@@ -55,7 +67,7 @@ jobs:
             exit 1
           fi
           
-          new_tag="r$v_major.$v_minor.$v_patch"
+          new_tag="${{ env.prefix }}$v_major.$v_minor.$v_patch"
           
           # Check if the new tag already exists
           if gh release view $new_tag; then
@@ -108,18 +120,35 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set prefix
+        id: set_prefix
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          if [[ "$BRANCH_NAME" == "master" ]]; then
+            echo "prefix=r" >> $GITHUB_ENV
+          elif [[ "$BRANCH_NAME" == "test" ]]; then
+            echo "prefix=t" >> $GITHUB_ENV
+          else
+            echo "prefix=d" >> $GITHUB_ENV
+          fi
+
       - name: Check if src has changed
         id: check_changes
         run: |
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | grep "^r" | sort -V | tail -n 1 | head -n 1)
-          PREVIOUS_TAG=$(git tag |  grep "^r" | sort -V | tail -n 2 | head -n 1)
+          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
           echo "previa para src $PREVIOUS_TAG"
           echo "ultima para src $LATEST_TAG"
 
           # Compare the tags and set CHANGED
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "src_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
           fi
@@ -140,10 +169,14 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | grep "^r" | sort -V | tail -n 1 | head -n 1)
-          PREVIOUS_TAG=$(git tag | grep "^r" | sort -V | tail -n 2 | head -n 1)
+          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
           echo "previa $PREVIOUS_TAG"
           echo "ultima $LATEST_TAG"
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "src_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
             CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
           fi
