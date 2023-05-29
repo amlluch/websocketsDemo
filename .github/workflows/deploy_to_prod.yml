@@ -286,6 +286,11 @@ jobs:
         if: env.lockfile_changed == 'true'
         uses: knowsuchagency/poetry-install@v2
 
+      - name: Upgrade poetry
+        if: env.lockfile_changed == 'true'
+        run: |
+          pip install --upgrade poetry
+
       - name: Export requirements
         if: env.lockfile_changed == 'true'
         run: |
