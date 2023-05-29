@@ -3,7 +3,9 @@ name: Build and Test
 on:
   push:
     tags:
-      - v*
+      - patch
+      - minor
+      - major
 
 jobs:
   setup:
@@ -26,10 +28,10 @@ jobs:
         
           # Check if a tag was created, it matches the correct format and the branch is master
           input_tag=$(basename $GITHUB_REF)
-          if [[ ! "$input_tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
-            echo "Not a valid tag, exiting"
-            exit 1
-          fi
+          #if [[ ! "$input_tag" =~ ^v([0-9]+(\.[0-9]+)?)?$ ]]; then
+          #  echo "Not a valid tag, exiting"
+          #  exit 1
+          #fi
           
           # Get the latest release tag
           git fetch
@@ -43,13 +45,13 @@ jobs:
           v_patch=${base_array[2]}
           
           # Create a new tag based on the input
-          if [[ $input_tag == 'v' ]]; then
+          if [[ $input_tag == 'major' ]]; then
             v_major=$((v_major+1))
             v_minor=0
             v_patch=0
-          elif [[ $input_tag == 'v'*'.'* ]]; then
+          elif [[ $input_tag == 'patch' ]]; then
             v_patch=$((v_patch+1))
-          elif [[ $input_tag == 'v'* ]]; then
+          elif [[ $input_tag == 'minor' ]]; then
             v_minor=$((v_minor+1))
             v_patch=0
           else
@@ -117,8 +119,8 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
-          PREVIOUS_TAG=$(git tag | sort -V | tail -n 3 | head -n 1)
+          LATEST_TAG=$(git tag | grep "^r" | sort -V | tail -n 1 | head -n 1)
+          PREVIOUS_TAG=$(git tag |  grep "^r" | sort -V | tail -n 2 | head -n 1)
           echo "previa para src $PREVIOUS_TAG"
           echo "ultima para src $LATEST_TAG"
 
@@ -143,8 +145,8 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          LATEST_TAG=$(git tag | sort -V | tail -n 2 | head -n 1)
-          PREVIOUS_TAG=$(git tag | sort -V | tail -n 3 | head -n 1)
+          LATEST_TAG=$(git tag | grep "^r" | sort -V | tail -n 1 | head -n 1)
+          PREVIOUS_TAG=$(git tag | grep "^r" | sort -V | tail -n 2 | head -n 1)
           echo "previa $PREVIOUS_TAG"
           echo "ultima $LATEST_TAG"
           if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
