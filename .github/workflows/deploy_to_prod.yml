@@ -92,16 +92,8 @@ jobs:
           # Check if the new tag already exists
           if gh release view $new_tag; then
             echo "Tag $new_tag already exists, exiting"
-            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
             exit 1
           fi
-          
-          # Delete the input tag and the release
-          echo "Deleting tag $input_tag and release $release_id"
-          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
-          
-          gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
-          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
           
           # Create and publish a new release with the new tag
           echo "The new release is $new_tag"
@@ -118,6 +110,16 @@ jobs:
         with:
           name: tag
           path: tag.txt
+
+      - name: Cleanup input tag
+        if: always()
+        run: |
+          echo "This is the cleanup step"
+          input_tag=$(basename $GITHUB_REF)
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
+          
+          gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
 
   build:
     needs: [setup]
