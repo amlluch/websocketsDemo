@@ -14,5 +14,4 @@ def handler(event: Dict, context: Context) -> Dict:
         MessageBody=json.dumps(event)
     )
     print(response)
-    print("event", event)
     return {"statusCode": 200}
