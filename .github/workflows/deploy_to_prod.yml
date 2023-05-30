@@ -227,7 +227,6 @@ jobs:
         poetry install
     - name: Run Tests
       id: run_tests
-      continue-on-error: true
       run: |
         poetry run pytest tests/
 
