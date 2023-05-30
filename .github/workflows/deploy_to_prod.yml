@@ -159,7 +159,7 @@ jobs:
           git fetch
           git fetch --tags
 
-          LATEST_TAG="${{ env.release_tag }}"
+          LATEST_TAG=${{ env.release_tag }}
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
 
@@ -390,14 +390,14 @@ jobs:
           echo "PREFIX is $SETUP_PREFIX"
           echo "prefix=$SETUP_PREFIX" >> $GITHUB_ENV
 
-      - name: Download tag artifact
+      - name: Download release tag artifact
         uses: actions/download-artifact@v2
         with:
           name: release_tag
 
-      - name: Read tag
+      - name: Read release tag
         run: |
-          TAG=$(cat tag.txt)
+          TAG=$(cat release_tag.txt)
           echo "TAG is $TAG"
           echo "release_tag=$TAG" >> $GITHUB_ENV
 
