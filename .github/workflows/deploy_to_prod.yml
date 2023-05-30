@@ -199,6 +199,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: tag
+
+    - name: Read tag
+      run: |
+        TAG=$(cat tag.txt)
+        echo "TAG is $TAG"
+        echo "input_tag=$TAG" >> $GITHUB_ENV
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
     - name: Set up Python Environment
       uses: actions/setup-python@v2
       with:
@@ -211,8 +226,22 @@ jobs:
       run: |
         poetry install
     - name: Run Tests
+      id: run_tests
+      continue-on-error: true
       run: |
         poetry run pytest tests/
+
+    - name: Delete release and tag
+      if: failure() && steps.run_tests.outcome == 'failure'
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.input_tag }} | jq .id)
+        
+        gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
+        gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.input_tag }}
+        
+        exit 1
 
   deploy:
     needs: [ test ]
