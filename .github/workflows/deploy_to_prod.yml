@@ -251,7 +251,7 @@ jobs:
           path: dependencies_changed.txt
 
       - name: Check if cloudformation changed
-        id: check_dependencies_changes
+        id: check_cloudformation_changes
         run: |
           # Get the tags for the last two releases
 
