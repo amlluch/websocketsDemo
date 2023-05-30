@@ -43,15 +43,15 @@ jobs:
             echo "prefix=d" >> $GITHUB_ENV
           fi
 
-      - name: Write prefix to file
-        run: |
-          echo ${{ env.prefix }} > prefix.txt
-
-      - name: Upload prefix as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: prefix
-          path: prefix.txt
+#      - name: Write prefix to file
+#        run: |
+#          echo ${{ env.prefix }} > prefix.txt
+#
+#      - name: Upload prefix as artifact
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: prefix
+#          path: prefix.txt
 
       - name: Create release
         env:
@@ -72,13 +72,13 @@ jobs:
           v_patch=${base_array[2]}
           
           # Create a new tag based on the input
-          if [[ $input_tag == 'major'* ]]; then
+          if [[ $input_tag == 'major' ]]; then
             v_major=$((v_major+1))
             v_minor=0
             v_patch=0
-          elif [[ $input_tag == 'patch'* ]]; then
+          elif [[ $input_tag == 'patch' ]]; then
             v_patch=$((v_patch+1))
-          elif [[ $input_tag == 'minor'* ]]; then
+          elif [[ $input_tag == 'minor' ]]; then
             v_minor=$((v_minor+1))
             v_patch=0
           else
