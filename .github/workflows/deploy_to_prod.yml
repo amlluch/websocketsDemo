@@ -157,9 +157,6 @@ jobs:
           git fetch --tags
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
-          
-          echo "Aqui el latest $LATEST_TAG"
-          echo "Aqui el previous $PREVIOUS_TAG"
 
           # Compare the tags and set CHANGED
           if [ -z "$PREVIOUS_TAG" ]; then
@@ -288,13 +285,24 @@ jobs:
           echo "PREFIX is $SETUP_PREFIX"
           echo "prefix=$SETUP_PREFIX" >> $GITHUB_ENV
 
+      - name: Download tag artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: tag
+
+      - name: Read tag
+        run: |
+          TAG=$(cat tag.txt)
+          echo "TAG is $TAG"
+          echo "input_tag=$TAG" >> $GITHUB_ENV
+
       - name: Check if src has changed
         id: check_changes
         run: |
           # Get the tags for the last two releases
-          echo "aqui la variable entorno prefix es ${{ env.prefix }}"
           
           git fetch
+          git fetch --tags
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
 
@@ -324,7 +332,8 @@ jobs:
           # Get the tags for the last two releases
           
           git fetch
-          echo "Dentro del has changed de poetry lock el prefix es ${{ env.prefix }}"
+          git fetch --tags
+
           LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
           PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
 
@@ -430,31 +439,8 @@ jobs:
           --parameter-overrides RepoName='${{ env.REPO_NAME }}' LambdaCodeVersion='${{ env.VERSION_ID }}' \
           LambdaLayerVersion='${{ env.DEPENDENCIES_ID }}' Stage='${{ env.STAGE }}'
 
-  clean:
-    needs: [ build, test, deploy ]
-    if: ${{ needs.build.result == 'failure' || needs.test.result == 'failure' || needs.deploy.result == 'failure' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: tag
-
-      - name: Read tag
-        run: |
-          TAG=$(cat tag.txt)
-          echo "TAG is $TAG"
-          echo "input_tag=$TAG" >> $GITHUB_ENV
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
       - name: Delete release and tag
+        if: failure()
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
