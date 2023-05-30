@@ -121,6 +121,8 @@ jobs:
           
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
           gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+          
+          exit 0
 
   build:
     needs: [setup]
