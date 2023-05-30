@@ -421,61 +421,10 @@ jobs:
           DEPENDENCIES_CHANGED=$(cat dependencies_changed.txt)
           echo "dependencies_changed=$DEPENDENCIES_CHANGED" >> $GITHUB_ENV
 
-#      - name: Check if src has changed
-#        id: check_changes
-#        run: |
-#          # Get the tags for the last two releases
-#
-#          git fetch
-#          git fetch --tags
-#          #LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
-#          LATEST_TAG=${{ env.release_tag }}
-#          PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
-#
-#          # Compare the tags and set CHANGED
-#          if [ -z "$PREVIOUS_TAG" ]; then
-#            echo "src_changed=true" >> $GITHUB_ENV
-#            exit 0
-#          fi
-#
-#          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
-#            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- src)
-#          fi
-#          if [ -n "$CHANGED" ]; then
-#            echo "src_changed=true" >> $GITHUB_ENV
-#          else
-#            echo "src_changed=false" >> $GITHUB_ENV
-#          fi
-
       - name: Generate zip for code
         if: env.src_changed == 'true'
         run: |
           zip -r lambda_code.zip src
-
-#      - name: Check if poetry.lock has changed
-#        id: check_lockfile_changes
-#        run: |
-#          # Get the tags for the last two releases
-#
-#          git fetch
-#          git fetch --tags
-#
-#          #LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
-#          LATEST_TAG=${{ env.release_tag }}
-#          PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
-#
-#          if [ -z "$PREVIOUS_TAG" ]; then
-#            echo "src_changed=true" >> $GITHUB_ENV
-#            exit 0
-#          fi
-#          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
-#            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
-#          fi
-#          if [ -n "$CHANGED" ]; then
-#            echo "lockfile_changed=true" >> $GITHUB_ENV
-#          else
-#            echo "lockfile_changed=false" >> $GITHUB_ENV
-#          fi
 
       - name: Set up Python Environment
         if: env.lockfile_changed == 'true'
