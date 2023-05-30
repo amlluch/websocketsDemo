@@ -43,15 +43,15 @@ jobs:
             echo "prefix=d" >> $GITHUB_ENV
           fi
 
-#      - name: Write prefix to file
-#        run: |
-#          echo ${{ env.prefix }} > prefix.txt
-#
-#      - name: Upload prefix as artifact
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: prefix
-#          path: prefix.txt
+      - name: Write prefix to file
+        run: |
+          echo ${{ env.prefix }} > prefix.txt
+
+      - name: Upload prefix as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: prefix
+          path: prefix.txt
 
       - name: Create release
         env:
