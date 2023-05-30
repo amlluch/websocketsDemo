@@ -6,3 +6,4 @@ python/
 __pycache__/
 .aws-sam/
 packaged-template.yml
+.mypy_cache/
