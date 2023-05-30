@@ -159,7 +159,7 @@ jobs:
           git fetch
           git fetch --tags
 
-          LATEST_TAG=env.release_tag
+          LATEST_TAG="${{ env.release_tag }}"
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
 
