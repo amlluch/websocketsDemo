@@ -112,6 +112,8 @@ jobs:
           path: tag.txt
 
       - name: Cleanup input tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         if: always()
         run: |
           echo "This is the cleanup step"
