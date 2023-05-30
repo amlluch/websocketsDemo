@@ -83,7 +83,6 @@ jobs:
             v_patch=0
           else
             echo "Invalid input tag"
-            gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
             exit 1
           fi
           
@@ -101,15 +100,15 @@ jobs:
           
           echo "release_tag=$new_tag" >> $GITHUB_ENV
 
-      - name: Write tag to file
+      - name: Write release tag to file
         run: |
-          echo ${{ env.release_tag }} > tag.txt
+          echo ${{ env.release_tag }} > release_tag.txt
 
       - name: Upload tag as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: tag
-          path: tag.txt
+          name: release_tag
+          path: release_tag.txt
 
       - name: Cleanup input tag
         env:
@@ -144,13 +143,13 @@ jobs:
       - name: Download tag artifact
         uses: actions/download-artifact@v2
         with:
-          name: tag
+          name: release_tag
 
       - name: Read tag
         run: |
-          TAG=$(cat tag.txt)
+          TAG=$(cat release_tag.txt)
           echo "TAG is $TAG"
-          echo "input_tag=$TAG" >> $GITHUB_ENV
+          echo "release_tag=$TAG" >> $GITHUB_ENV
 
       - name: Check if src has changed
         id: check_changes
@@ -159,8 +158,10 @@ jobs:
 
           git fetch
           git fetch --tags
-          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+
+          LATEST_TAG= ${{ env.release_tag }}
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
 
           # Compare the tags and set CHANGED
           if [ -z "$PREVIOUS_TAG" ]; then
@@ -177,35 +178,135 @@ jobs:
             echo "src_changed=false" >> $GITHUB_ENV
           fi
 
+      - name: Write src_changed to file
+        run: |
+          echo ${{ env.src_changed }} > src_changed.txt
+
+      - name: Upload src_changed as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: src_changed
+          path: src_changed.txt
+
+      - name: Check if tests has changed
+        id: check_tests_changes
+        run: |
+          # Get the tags for the last two releases
+
+          git fetch
+          git fetch --tags
+
+          LATEST_TAG=${{ env.release_tag }}
+          PREVIOUS_TAG=${{ env.previous_tag }}
+
+          # Compare the tags and set CHANGED
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "tests_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- tests)
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "tests_changed=true" >> $GITHUB_ENV
+          else
+            echo "tests_changed=false" >> $GITHUB_ENV
+          fi
+
+      - name: Check if dependencies changed
+        id: check_dependencies_changes
+        run: |
+          # Get the tags for the last two releases
+
+          git fetch
+          git fetch --tags
+
+          LATEST_TAG=${{ env.release_tag }}
+          PREVIOUS_TAG=${{ env.previous_tag }}
+
+          # Compare the tags and set CHANGED
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "dependencies_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "dependencies_changed=true" >> $GITHUB_ENV
+          else
+            echo "dependencies_changed=false" >> $GITHUB_ENV
+          fi
+
+      - name: Write dependencies_changed to file
+        run: |
+          echo ${{ env.dependencies_changed }} > dependencies_changed.txt
+
+      - name: Upload dependencies_changed as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dependencies_changed
+          path: dependencies_changed.txt
+
+      - name: Check if cloudformation changed
+        id: check_dependencies_changes
+        run: |
+          # Get the tags for the last two releases
+
+          git fetch
+          git fetch --tags
+
+          LATEST_TAG=${{ env.release_tag }}
+          PREVIOUS_TAG=${{ env.previous_tag }}
+
+          # Compare the tags and set CHANGED
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "cloudformation_changed=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if [ "$LATEST_TAG" != "$PREVIOUS_TAG" ]; then
+            CHANGED=$(git diff --name-only $PREVIOUS_TAG $LATEST_TAG -- poetry.lock)
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "cloudformation_changed=true" >> $GITHUB_ENV
+          else
+            echo "cloudformation_changed=false" >> $GITHUB_ENV
+          fi
+
       - name: Set up Python Environment
-        if: env.src_changed == 'true'
+        if: env.src_changed == 'true' || env.tests_changed == 'true'
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
 
       - name: Poetry Install
-        if: env.src_changed == 'true'
+        if: env.src_changed == 'true' || env.tests_changed == 'true'
         uses: knowsuchagency/poetry-install@v2
         with:
           create-virtualenv: true
 
       - name: Install Dependencies
-        if: env.src_changed == 'true'
+        if: env.src_changed == 'true' || env.tests_changed == 'true'
         run: |
           poetry install
 
       - name: Run mypy
         id: run_mypy
-        if: env.src_changed == 'true'
+        if: env.src_changed == 'true' || env.tests_changed == 'true'
         run: |
           poetry run mypy src/
 
-      - name: Install cfnlinter
+      - name: Install cfn linter
+        if: env.cloudformation_changed == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install cfn-lint
 
       - name: Run cfn-lint
+        if: env.cloudformation_changed == 'true'
         id: run_cfnlint
         run: |
           cfn-lint cloudformation/*
@@ -215,10 +316,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.input_tag }} | jq .id)
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.release_tag }} | jq .id)
           
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
-          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.input_tag }}
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.release_tag }}
 
   test:
     needs: [build]
@@ -231,13 +332,13 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v2
       with:
-        name: tag
+        name: release_tag
 
     - name: Read tag
       run: |
-        TAG=$(cat tag.txt)
+        TAG=$(cat release_tag.txt)
         echo "TAG is $TAG"
-        echo "input_tag=$TAG" >> $GITHUB_ENV
+        echo "release_tag=$TAG" >> $GITHUB_ENV
 
     - name: Install jq
       run: sudo apt-get install -y jq
@@ -266,7 +367,7 @@ jobs:
         release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.input_tag }} | jq .id)
         
         gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
-        gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.input_tag }}
+        gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.release_tag }}
 
   deploy:
     needs: [ test ]
@@ -292,13 +393,13 @@ jobs:
       - name: Download tag artifact
         uses: actions/download-artifact@v2
         with:
-          name: tag
+          name: release_tag
 
       - name: Read tag
         run: |
           TAG=$(cat tag.txt)
           echo "TAG is $TAG"
-          echo "input_tag=$TAG" >> $GITHUB_ENV
+          echo "release_tag=$TAG" >> $GITHUB_ENV
 
       - name: Check if src has changed
         id: check_changes
@@ -307,7 +408,8 @@ jobs:
           
           git fetch
           git fetch --tags
-          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          #LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          LATEST_TAG=${{ env.release_tag }}
           PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
 
           # Compare the tags and set CHANGED
@@ -338,7 +440,8 @@ jobs:
           git fetch
           git fetch --tags
 
-          LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          #LATEST_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 1 | head -n 1)
+          LATEST_TAG=${{ env.release_tag }}
           PREVIOUS_TAG=$(git tag | grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
 
           if [ -z "$PREVIOUS_TAG" ]; then
@@ -451,4 +554,4 @@ jobs:
           release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.input_tag }} | jq .id)
           
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
-          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.input_tag }}
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/${{ env.release_tag }}
