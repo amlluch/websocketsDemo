@@ -135,17 +135,17 @@ jobs:
           name: commits_list
           path: commits_list.txt
 
-#      - name: Cleanup input tag
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-#        if: always()
-#        run: |
-#          echo "This is the cleanup step"
-#          input_tag=$(basename $GITHUB_REF)
-#          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
-#
-#          gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
-#          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+      - name: Cleanup input tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        if: always()
+        run: |
+          echo "This is the cleanup step"
+          input_tag=$(basename $GITHUB_REF)
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
+
+          gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
 
   revert:
     needs: [setup]
