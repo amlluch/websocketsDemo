@@ -184,9 +184,9 @@ jobs:
         run: |
 
           echo "Aqui el github ref: $GITHUB_REF"
-#          branch_name=new-branch-$(date +%Y%m%d%H%M%S)
-#          # Checkout a new branch
-#          git checkout -b $branch_name
+          #branch_name=new-branch-$(date +%Y%m%d%H%M%S)
+          ## Checkout a new branch
+          #git checkout -b $branch_name
 
           
           IFS=' ' read -ra commits <<< "${{ env.commits_list }}"
@@ -195,11 +195,11 @@ jobs:
             git revert --no-edit $commit || exit 1
           done
           
-#          # Checkout back to the original branch
-#          git checkout ${GITHUB_REF#refs/heads/}
-#
-#          # Merge the new branch into the original branch
-#          git merge $branch_name
+          # Checkout back to the original branch
+          #git checkout ${GITHUB_REF#refs/heads/}
+
+          # Merge the new branch into the original branch
+          #git merge $branch_name
 
       - name: Push changes
         env:
