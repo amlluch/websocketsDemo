@@ -174,12 +174,10 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.email "amlluch@gmail.com"
-          git config --global user.name "amlluch"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
 
       - name: Create new branch, revert commits and merge
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
 
           IFS=' ' read -ra commits <<< "${{ env.commits_list }}"
