@@ -5,6 +5,5 @@ from aws_lambda_typing.context import Context
 
 def handler(event: Dict, context: Context) -> Dict:
     print(event)
-    print("To be removed")
 
     return {"statusCode": 200}
