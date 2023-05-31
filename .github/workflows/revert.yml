@@ -185,6 +185,6 @@ jobs:
             git revert --no-edit $commit || exit 1
           done
           
-          #git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           #git remote set-url origin https://x-access-token:${{ secrets.MY_PAT }}@github.com/${{ github.repository }}
           git push origin HEAD
