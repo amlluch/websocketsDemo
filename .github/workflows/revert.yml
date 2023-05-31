@@ -194,7 +194,7 @@ jobs:
             git revert --no-edit $commit || exit 1
           done
           
-          git push
+          git push origin ${GITHUB_REF#refs/heads/}
 #
 #      - name: Push changes
 #        env:
