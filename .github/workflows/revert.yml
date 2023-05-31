@@ -7,7 +7,6 @@ on:
 
 jobs:
   setup:
-    needs: [setup]
     runs-on: ubuntu-latest
 
     steps:
