@@ -194,7 +194,7 @@ jobs:
             git revert --no-edit $commit || exit 1
           done
           
-          git push
+          git push origin HEAD:master
 #
 #      - name: Push changes
 #        env:
