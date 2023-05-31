@@ -182,12 +182,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
 
-          echo "Aqui el github ref: $GITHUB_REF"
-          #branch_name=new-branch-$(date +%Y%m%d%H%M%S)
-          ## Checkout a new branch
-          #git checkout -b $branch_name
-
-          
           IFS=' ' read -ra commits <<< "${{ env.commits_list }}"
           for i in "${!commits[@]}"; do
             commit=${commits[$i]}
