@@ -1,4 +1,4 @@
-name: Build and Test
+name: Create release
 
 on:
   push:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Install GitHub CLI
         run: |
@@ -34,15 +36,15 @@ jobs:
           BRANCHES=$(git branch -r --contains "$BRANCH_NAME@{0}")
           
           BRANCH_NAME=$(echo $BRANCHES | cut -d'/' -f 2)
-          
-          echo "Aqui el nombre del branch $BRANCH_NAME"
 
           if [[ "$BRANCH_NAME" == "master" ]]; then
             echo "prefix=r" >> $GITHUB_ENV
           elif [[ "$BRANCH_NAME" == "test" ]]; then
             echo "prefix=t" >> $GITHUB_ENV
-          else
+          elif [[ "$BRANCH_NAME" == "dev" ]]; then
             echo "prefix=d" >> $GITHUB_ENV
+          else
+            exit 1
           fi
 
       - name: Write prefix to file
@@ -64,7 +66,8 @@ jobs:
           
           # Get the latest release tag
           git fetch
-          latest_tag=$(gh release list --repo ${{ github.repository }} | grep "^${{ env.prefix }}" | cut -f1 | sort --version-sort | tail -n1)
+          git fetch --tags
+          latest_tag=$(gh release list --repo ${{ github.repository }} | grep "^${{ env.prefix }}" | grep -v "revert" | cut -f1 | sort --version-sort | tail -n1)
           
           # Extract the current version number
           base_string=$(echo ${latest_tag:-"${{ env.prefix }}0.0.0"} | cut -c2-)
@@ -132,6 +135,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Download prefix artifact
         uses: actions/download-artifact@v2
@@ -164,7 +169,7 @@ jobs:
           git fetch --tags
 
           LATEST_TAG=${{ env.release_tag }}
-          PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | sort -V | tail -n 2 | head -n 1)
+          PREVIOUS_TAG=$(git tag |  grep "^${{ env.prefix }}" | grep -v "revert" | sort -V | tail -n 2 | head -n 1)
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_ENV
 
           # Compare the tags and set CHANGED
@@ -332,6 +337,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Download artifact
       uses: actions/download-artifact@v2

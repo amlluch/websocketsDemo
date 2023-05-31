@@ -1,0 +1,89 @@
+name: Revert last release
+
+on:
+  push:
+    tags:
+      - revert
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install GitHub CLI
+        run: |
+          curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz \
+          | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Set prefix and branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        id: set_prefix
+        run: |
+          git fetch
+
+          TAG_NAME=${GITHUB_REF##*/}
+          COMMIT_HASH=$(gh api repos/${{ github.repository }}/releases/tags/$TAG_NAME --jq '.target_commitish')
+          BRANCHES=$(git branch -r --contains "$BRANCH_NAME@{0}")
+
+          BRANCH_NAME=$(echo $BRANCHES | cut -d'/' -f 2)
+
+          if [[ "$BRANCH_NAME" == "master" ]]; then
+            echo "prefix=r" >> $GITHUB_ENV
+          elif [[ "$BRANCH_NAME" == "test" ]]; then
+            echo "prefix=t" >> $GITHUB_ENV
+          else
+            echo "prefix=d" >> $GITHUB_ENV
+          fi
+          echo "branch=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Write branch to file
+        run: |
+          echo ${{ env.branch }} > branch.txt
+
+      - name: Upload branch as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: branch
+          path: branch.txt
+
+      - name: Get latest and previous tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          # Get the latest release tag
+          git fetch
+          git fetch --tags
+          latest_tag=$(gh release list --repo ${{ github.repository }} | grep "^${{ env.prefix }}" | grep -v "revert" | cut -f1 | sort --version-sort | tail -n1)
+          previous_tag=$(gh release list --repo ${{ github.repository }} |  grep "^${{ env.prefix }}" | grep -v "revert" | cut -f1 | sort --version-sort | tail -n 2 | head -n 1)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          echo "previous_tag=$previous_tag" >> $GITHUB_ENV
+
+      - name: Write latest tag to file
+        run: |
+          echo ${{ env.latest_tag }} > latest_tag.txt
+
+      - name: Upload latest_tag as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: latest_tag
+          path: latest_tag.txt
+
+      - name: Cleanup input tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        if: always()
+        run: |
+          echo "This is the cleanup step"
+          input_tag=$(basename $GITHUB_REF)
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/$input_tag | jq .id)
+
+          gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
+          gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
