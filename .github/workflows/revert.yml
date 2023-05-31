@@ -145,3 +145,42 @@ jobs:
 
           gh api -X DELETE /repos/${{ github.repository }}/releases/$release_id
           gh api -X DELETE /repos/${{ github.repository }}/git/refs/tags/$input_tag
+
+  revert:
+    - runs-on: ubuntu-latest
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install GitHub CLI
+        run: |
+          curl -sSL https://github.com/cli/cli/releases/download/v2.0.0/gh_2.0.0_linux_amd64.tar.gz \
+          | sudo tar xz -C /usr/local/bin --strip-components=2 gh_2.0.0_linux_amd64/bin/gh
+
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: commits_list
+
+    - name: Read commits_list
+      run: |
+        COMMITS_LIST=$(cat commits_list.txt)
+        echo "commits_list=$COMMITS_LIST" >> $GITHUB_ENV
+
+    - name: Revert commits
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        IFS=' ' read -ra commits <<< "${{ env.commits_list }}"
+        for i in "${!commits[@]}"; do
+          commit=${commits[$i]}
+          git revert --no-edit $commit || exit 1
+        done
+        git push origin HEAD
+
+    - name: Push commits
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: git push origin HEAD
