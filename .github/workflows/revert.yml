@@ -182,11 +182,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+
+          echo "Aqui el github ref: $GITHUB_REF"
 #          branch_name=new-branch-$(date +%Y%m%d%H%M%S)
 #          # Checkout a new branch
 #          git checkout -b $branch_name
 
-          echo "Aqui el github ref: $GITHUB_REF"
           
           IFS=' ' read -ra commits <<< "${{ env.commits_list }}"
           for i in "${!commits[@]}"; do
