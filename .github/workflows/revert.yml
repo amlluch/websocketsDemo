@@ -78,6 +78,62 @@ jobs:
           name: latest_tag
           path: latest_tag.txt
 
+      - name: Get commits and check changes
+        id: check_changes
+        run: |
+          previous_release_sha=$(git rev-parse ${{ env.previous_tag }})
+          latest_commit_sha=$(git rev-parse HEAD)
+          commit_shas=$(git rev-list $previous_release_sha..$latest_commit_sha)
+          
+          changes_in_src="false"
+          changes_in_poetry_lock="false"
+          commits_list=""
+          
+          for commit_sha in $commit_shas; do
+            changed_files=$(git diff --name-only $commit_sha^..$commit_sha)
+            if echo "$changed_files" | grep -q -e "^src/"; then
+              changes_in_src="true"
+            fi
+            if echo "$changed_files" | grep -q -e "^poetry.lock$"; then
+              changes_in_poetry_lock="true"
+            fi
+            commits_list+="$commit_sha "
+          done
+          
+          echo "src_changed=$changes_in_src"
+          echo "dependencies_changed=$changes_in_poetry_lock
+          echo "commits_list=$commits_list
+
+      - name: Write dependencies_changed to file
+        run: |
+          echo ${{ env.dependencies_changed }} > dependencies_changed.txt
+
+      - name: Upload dependencies_changed as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dependencies_changed
+          path: dependencies_changed.txt
+
+      - name: Write src_changed to file
+        run: |
+          echo ${{ env.src_changed }} > src_changed.txt
+
+      - name: Upload src_changed as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: src_changed
+          path: src_changed.txt
+
+      - name: Write commits list to file
+        run: |
+          echo ${{ env.commits_list }} > commits_list.txt
+
+      - name: Upload commits list as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: commits_list
+          path: commits_list.txt
+
       - name: Cleanup input tag
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
