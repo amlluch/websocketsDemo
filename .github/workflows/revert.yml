@@ -101,7 +101,7 @@ jobs:
           done
           
           echo "src_changed=$changes_in_src" >> $GITHUB_ENV
-          echo "dependencies_changed=$changes_in_poetry_lock >> $GITHUB_ENV
+          echo "dependencies_changed=$changes_in_poetry_lock" >> $GITHUB_ENV
           echo "commits_list=$commits_list" >> $GITHUB_ENV
 
       - name: Write dependencies_changed to file
