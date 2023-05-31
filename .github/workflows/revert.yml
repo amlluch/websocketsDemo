@@ -65,6 +65,8 @@ jobs:
           previous_tag=$(gh release list --repo ${{ github.repository }} |  grep "^${{ env.prefix }}" | grep -v "revert" | cut -f1 | sort --version-sort | tail -n 2 | head -n 1)
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
           echo "previous_tag=$previous_tag" >> $GITHUB_ENV
+          
+          echo "Previous tag is $previous_tag"
 
       - name: Write latest tag to file
         run: |
