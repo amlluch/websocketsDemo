@@ -194,11 +194,6 @@ jobs:
             git revert --no-edit $commit || exit 1
           done
           
-          # Checkout back to the original branch
-          #git checkout ${GITHUB_REF#refs/heads/}
-
-          # Merge the new branch into the original branch
-          #git merge $branch_name
 
       - name: Push changes
         env:
